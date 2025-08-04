@@ -1,0 +1,3763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manufacturer Project Management System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .progress-ring {
+            transform: rotate(-90deg);
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .hover-scale {
+            transition: transform 0.2s ease;
+        }
+        
+        .hover-scale:hover {
+            transform: scale(1.02);
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        
+        .notification {
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 200px;
+            width: 100%;
+        }
+        
+        .criteria-item {
+            transition: all 0.3s ease;
+        }
+        
+        .criteria-item:hover {
+            background-color: rgba(99, 102, 241, 0.05);
+        }
+        
+        .action-button {
+            transition: all 0.2s ease;
+        }
+        
+        .action-button:hover {
+            transform: translateY(-2px);
+        }
+        
+        .search-panel {
+            transition: all 0.3s ease;
+        }
+        
+        .search-panel.collapsed {
+            max-height: 0;
+            overflow: hidden;
+        }
+        
+        .search-panel.expanded {
+            max-height: 500px;
+        }
+        
+        .excel-button {
+            background: linear-gradient(135deg, #1d6f42 0%, #2e7d32 100%);
+            transition: all 0.3s ease;
+        }
+        
+        .excel-button:hover {
+            background: linear-gradient(135deg, #2e7d32 0%, #388e3c 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(46, 125, 50, 0.3);
+        }
+        
+        .search-bar {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .search-bar:focus-within {
+            box-shadow: 0 4px 16px rgba(99, 102, 241, 0.2);
+        }
+        
+        .document-preview {
+            max-width: 100%;
+            max-height: 60vh;
+            object-fit: contain;
+        }
+        
+        .document-item {
+            transition: all 0.3s ease;
+        }
+        
+        .document-item:hover {
+            background-color: rgba(99, 102, 241, 0.05);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .preview-button {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            transition: all 0.3s ease;
+        }
+        
+        .preview-button:hover {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+        
+        .download-button {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            transition: all 0.3s ease;
+        }
+        
+        .download-button:hover {
+            background: linear-gradient(135deg, #047857 0%, #065f46 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+        }
+        
+        .modal-backdrop {
+            backdrop-filter: blur(5px);
+        }
+        
+        .folder-structure {
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+            border: 1px solid #d1d5db;
+        }
+        
+        .folder-icon {
+            color: #f59e0b;
+        }
+        
+        .file-icon {
+            color: #6b7280;
+        }
+        
+        .zip-button {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+            transition: all 0.3s ease;
+        }
+        
+        .zip-button:hover {
+            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+        }
+        
+        .export-menu {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .export-menu-content {
+            display: none;
+            position: absolute;
+            background-color: white;
+            min-width: 200px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+            border-radius: 8px;
+            right: 0;
+            top: 100%;
+            margin-top: 5px;
+        }
+        
+        .export-menu-content a {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            border-radius: 8px;
+        }
+        
+        .export-menu-content a:hover {
+            background-color: #f1f1f1;
+        }
+        
+        .export-menu:hover .export-menu-content {
+            display: block;
+        }
+        
+        .folder-button {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            transition: all 0.3s ease;
+        }
+        
+        .folder-button:hover {
+            background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(217, 119, 6, 0.3);
+        }
+        
+        .login-container {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .login-form {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            padding: 2rem;
+            width: 100%;
+            max-width: 400px;
+        }
+        
+        .user-progress-form {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .profile-image-container {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 1rem;
+        }
+        
+        .profile-image {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid #e5e7eb;
+        }
+        
+        .profile-image-upload {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            background: #4f46e5;
+            color: white;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .profile-image-upload:hover {
+            background: #4338ca;
+            transform: scale(1.05);
+        }
+        
+        .user-card {
+            transition: all 0.3s ease;
+        }
+        
+        .user-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        .admin-button {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            transition: all 0.3s ease;
+        }
+        
+        .admin-button:hover {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+        }
+        
+        .logout-button {
+            transition: all 0.2s ease;
+        }
+        
+        .logout-button:hover {
+            transform: scale(1.1);
+        }
+        
+        .person-card {
+            transition: all 0.3s ease;
+        }
+        
+        .person-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        .role-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            margin-right: 0.25rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        .role-badge.assign {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .role-badge.testing {
+            background-color: #e9d5ff;
+            color: #7e22ce;
+        }
+        
+        .role-badge.quality {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+        
+        .tab-button {
+            transition: all 0.2s ease;
+        }
+        
+        .tab-button.active {
+            background-color: #4f46e5;
+            color: white;
+        }
+        
+        .tab-button:not(.active):hover {
+            background-color: #e5e7eb;
+        }
+        
+        .add-person-option {
+            font-style: italic;
+            color: #6b7280;
+            background-color: #f9fafb;
+        }
+        
+        .main-content {
+            flex: 1;
+        }
+        
+        .footer {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            padding: 1rem 0;
+            text-align: center;
+            margin-top: auto;
+        }
+    </style>
+</head>
+<body>
+    <!-- Login View -->
+    <div id="loginView" class="login-container">
+        <div class="login-form">
+            <div class="text-center mb-8">
+                <i class="fas fa-industry text-5xl text-indigo-600 mb-4"></i>
+                <h1 class="text-3xl font-bold text-gray-800">Project Management System</h1>
+                <p class="text-gray-600 mt-2">Please login to continue</p>
+            </div>
+            
+            <form id="loginForm" class="space-y-6">
+                <div>
+                    <label for="loginUsername" class="block text-sm font-medium text-gray-700 mb-2">Username</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-user text-gray-400"></i>
+                        </div>
+                        <input type="text" id="loginUsername" required 
+                               class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                               placeholder="Enter your username">
+                    </div>
+                </div>
+                
+                <div>
+                    <label for="loginPassword" class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-lock text-gray-400"></i>
+                        </div>
+                        <input type="password" id="loginPassword" required 
+                               class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                               placeholder="Enter your password">
+                    </div>
+                </div>
+                
+                <div>
+                    <button type="submit" 
+                            class="w-full bg-indigo-600 text-white py-3 px-4 rounded-lg hover:bg-indigo-700 transition-colors font-medium">
+                        Login
+                    </button>
+                </div>
+            </form>
+            
+            <div class="mt-8 text-center text-xs text-gray-500">
+                <p>2025 Project Management System, All rights reserved to Tanjil Hossen - HR & Admin Officer</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main Application -->
+    <div id="mainApp" class="hidden">
+        <!-- Header -->
+        <header class="glass-effect shadow-lg sticky top-0 z-50">
+            <div class="container mx-auto px-4 py-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <i class="fas fa-industry text-3xl text-indigo-600"></i>
+                        <h1 class="text-2xl font-bold text-gray-800">Project Management System</h1>
+                    </div>
+                    <nav class="flex items-center space-x-6">
+                        <button onclick="showDashboard()" class="nav-btn text-gray-600 hover:text-indigo-600 transition-colors">
+                            <i class="fas fa-chart-line mr-2"></i>Dashboard
+                        </button>
+                        <button onclick="showProjects()" class="nav-btn text-gray-600 hover:text-indigo-600 transition-colors">
+                            <i class="fas fa-folder-open mr-2"></i>Projects
+                        </button>
+                        <button id="newProjectBtn" onclick="showCreateProject()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors">
+                            <i class="fas fa-plus mr-2"></i>New Project
+                        </button>
+                        <button id="folderBtn" onclick="setupProjectFolder()" class="folder-button text-white px-4 py-2 rounded-lg">
+                            <i class="fas fa-folder-open mr-2"></i>Link Project Folder
+                        </button>
+                        <div id="exportMenu" class="export-menu">
+                            <button class="zip-button text-white px-4 py-2 rounded-lg">
+                                <i class="fas fa-download mr-2"></i>Export
+                                <i class="fas fa-chevron-down ml-1"></i>
+                            </button>
+                            <div class="export-menu-content">
+                                <a href="#" onclick="exportAllDataAsZip(); return false;">
+                                    <i class="fas fa-file-archive mr-2"></i>Export All Data (ZIP)
+                                </a>
+                                <a href="#" onclick="exportAllProjectsToExcel(); return false;">
+                                    <i class="fas fa-file-excel mr-2"></i>Export All Projects (Excel)
+                                </a>
+                                <a href="#" onclick="exportDataAsJSON(); return false;">
+                                    <i class="fas fa-file-code mr-2"></i>Export Data (JSON)
+                                </a>
+                            </div>
+                        </div>
+                        <button id="adminBtn" onclick="showAdministrative()" class="admin-button text-white px-4 py-2 rounded-lg">
+                            <i class="fas fa-cog mr-2"></i>Administrative
+                        </button>
+                        <div class="flex items-center space-x-4 ml-6 pl-6 border-l border-gray-200">
+                            <div class="flex items-center space-x-2">
+                                <img id="currentUserImage" src="https://picsum.photos/seed/user/40/40.jpg" alt="Profile" class="w-10 h-10 rounded-full object-cover border-2 border-white shadow">
+                                <span id="currentUser" class="text-gray-700 font-medium"></span>
+                            </div>
+                            <button onclick="logout()" class="logout-button text-gray-600 hover:text-red-600 transition-colors" title="Logout">
+                                <i class="fas fa-sign-out-alt text-xl"></i>
+                            </button>
+                        </div>
+                    </nav>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Main Content -->
+        <main class="main-content container mx-auto px-4 py-8">
+            <!-- Dashboard View -->
+            <div id="dashboardView" class="fade-in">
+                <!-- Stats Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="glass-effect rounded-xl p-6 hover-scale">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 text-sm">Total Projects</p>
+                                <p class="text-3xl font-bold text-gray-800" id="totalProjects">0</p>
+                            </div>
+                            <div class="bg-blue-100 p-3 rounded-lg">
+                                <i class="fas fa-project-diagram text-blue-600 text-2xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="glass-effect rounded-xl p-6 hover-scale">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 text-sm">In Progress</p>
+                                <p class="text-3xl font-bold text-orange-600" id="inProgressProjects">0</p>
+                            </div>
+                            <div class="bg-orange-100 p-3 rounded-lg">
+                                <i class="fas fa-spinner text-orange-600 text-2xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="glass-effect rounded-xl p-6 hover-scale">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 text-sm">Testing Phase</p>
+                                <p class="text-3xl font-bold text-purple-600" id="testingProjects">0</p>
+                            </div>
+                            <div class="bg-purple-100 p-3 rounded-lg">
+                                <i class="fas fa-vial text-purple-600 text-2xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="glass-effect rounded-xl p-6 hover-scale">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 text-sm">Completed</p>
+                                <p class="text-3xl font-bold text-green-600" id="completedProjects">0</p>
+                            </div>
+                            <div class="bg-green-100 p-3 rounded-lg">
+                                <i class="fas fa-check-circle text-green-600 text-2xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Progress Overview Chart -->
+                <div class="glass-effect rounded-xl p-4 mb-8">
+                    <h3 class="text-lg font-semibold mb-3">Progress Overview</h3>
+                    <div class="chart-container">
+                        <canvas id="progressChart"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Recent Projects -->
+                <div class="glass-effect rounded-xl p-6">
+                    <h3 class="text-lg font-semibold mb-4">Recent Projects</h3>
+                    <div class="overflow-x-auto custom-scrollbar">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="border-b">
+                                    <th class="text-left py-3 px-4">Project Name</th>
+                                    <th class="text-left py-3 px-4">Status</th>
+                                    <th class="text-left py-3 px-4">Testing Status</th>
+                                    <th class="text-left py-3 px-4">SCM Status</th>
+                                    <th class="text-left py-3 px-4">Progress</th>
+                                    <th class="text-left py-3 px-4">End Date</th>
+                                    <th class="text-left py-3 px-4">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recentProjectsTable">
+                                <!-- Dynamic content -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Projects List View -->
+            <div id="projectsView" class="fade-in hidden">
+                <div class="glass-effect rounded-xl p-6 mb-6">
+                    <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-4">
+                        <h2 class="text-2xl font-bold">All Projects</h2>
+                        <div class="flex gap-4 w-full md:w-auto">
+                            <div class="relative w-full md:w-64 search-bar rounded-lg">
+                                <input type="text" id="searchProjects" placeholder="Search projects..." 
+                                       class="w-full px-4 py-2 pl-10 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                            </div>
+                            <button onclick="toggleSearchPanel()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors">
+                                <i class="fas fa-filter mr-2"></i>Advanced Search
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Advanced Search Panel -->
+                    <div id="searchPanel" class="search-panel collapsed glass-effect rounded-xl p-6 mb-6">
+                        <h3 class="text-lg font-semibold mb-4">Advanced Search</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Project Name</label>
+                                <input type="text" id="searchProjectName" placeholder="Search by name..." 
+                                       class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                                <select id="searchProjectStatus" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                    <option value="">All Status</option>
+                                    <option value="In Progress">In Progress</option>
+                                    <option value="Testing">Testing</option>
+                                    <option value="Completed">Completed</option>
+                                    <option value="In Hold">In Hold</option>
+                                    <option value="Cancelled">Cancelled</option>
+                                    <option value="Working On Delivery">Working On Delivery</option>
+                                    <option value="Documents Submitted">Documents Submitted</option>
+                                    <option value="Documents Processing">Documents Processing</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Start Date From</label>
+                                <input type="date" id="searchStartDateFrom" 
+                                       class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Start Date To</label>
+                                <input type="date" id="searchStartDateTo" 
+                                       class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">End Date From</label>
+                                <input type="date" id="searchEndDateFrom" 
+                                       class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">End Date To</label>
+                                <input type="date" id="searchEndDateTo" 
+                                       class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Assign Person</label>
+                                <select id="searchAssignPerson" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                    <option value="">All Persons</option>
+                                </select>
+                            </div>
+                            
+                            <div class="flex items-end">
+                                <button onclick="performAdvancedSearch()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors w-full">
+                                    <i class="fas fa-search mr-2"></i>Search
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="projectsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Dynamic project cards -->
+                </div>
+            </div>
+            
+            <!-- Create/Edit Project View -->
+            <div id="createProjectView" class="fade-in hidden">
+                <div class="glass-effect rounded-xl p-8 max-w-4xl mx-auto">
+                    <h2 class="text-2xl font-bold mb-6" id="formTitle">Create New Project</h2>
+                    <form id="projectForm" class="space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Project Name</label>
+                                <input type="text" id="projectName" required 
+                                       class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Project Status</label>
+                                <select id="projectStatus" required 
+                                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                    <option value="">Select Status</option>
+                                    <option value="In Progress">In Progress</option>
+                                    <option value="Testing">Testing</option>
+                                    <option value="Completed">Completed</option>
+                                    <option value="Working On Delivery">Working On Delivery</option>
+                                    <option value="In Hold">In Hold</option>
+                                    <option value="Cancelled">Cancelled</option>
+                                    <option value="Documents Submitted">Documents Submitted</option>
+                                    <option value="Documents Processing">Documents Processing</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Testing Status</label>
+                                <select id="testingStatus" 
+                                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                    <option value="">Not Started</option>
+                                    <option value="In Progress">In Progress</option>
+                                    <option value="Testing Failed">Testing Failed</option>
+                                    <option value="Testing Hold">Testing Hold</option>
+                                    <option value="Testing Cancel">Testing Cancel</option>
+                                    <option value="Testing Complete">Testing Complete</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">SCM Progress Status</label>
+                                <select id="scmProgressStatus" 
+                                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                    <option value="">Not Started</option>
+                                    <option value="In Progress">In Progress</option>
+                                    <option value="Party Searching">Party Searching</option>
+                                    <option value="Party Confirm">Party Confirm</option>
+                                    <option value="PO/WO Process">PO/WO Process</option>
+                                    <option value="Working On Delivery">Working On Delivery</option>
+                                    <option value="Complete">Complete</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
+                                <input type="date" id="startDate" required 
+                                       class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">End Date</label>
+                                <input type="date" id="endDate" required 
+                                       class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Testing Date</label>
+                                <input type="date" id="testingDate" 
+                                       class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Project Progress (%)</label>
+                                <input type="number" id="projectProgress" min="0" max="100" value="0" required 
+                                       class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">SCM Progress (%)</label>
+                                <input type="number" id="scmProgress" min="0" max="100" value="0" required 
+                                       class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Assign Person</label>
+                                <select id="assignPerson" required 
+                                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                    <option value="">Select Person</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Testing Person</label>
+                                <select id="testingPerson" 
+                                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                    <option value="">Select Person</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Quality Person</label>
+                                <select id="qualityPerson" 
+                                        class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                    <option value="">Select Person</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Project Details</label>
+                            <textarea id="projectDetails" rows="4" 
+                                      class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+                        </div>
+                        
+                        <!-- Documents Upload Section -->
+                        <div id="documentsSection">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Project Documents (Party Requirements)</label>
+                            <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                                <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-4"></i>
+                                <p class="text-gray-600 mb-2">Drag and drop files here or click to browse</p>
+                                <p class="text-sm text-gray-500 mb-4">Files will be saved in project folder: <span id="projectFolderName" class="font-medium text-indigo-600">Project Name</span></p>
+                                <input type="file" id="projectDocuments" multiple class="hidden" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.png,.jpeg">
+                                <button type="button" onclick="document.getElementById('projectDocuments').click()" 
+                                        class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors">
+                                    <i class="fas fa-upload mr-2"></i>Upload Documents
+                                </button>
+                            </div>
+                            <div id="uploadedDocuments" class="mt-4 space-y-2">
+                                <!-- Uploaded documents will be listed here -->
+                            </div>
+                        </div>
+                        
+                        <!-- Project Criteria Section -->
+                        <div id="criteriaSection">
+                            <div class="flex justify-between items-center mb-4">
+                                <label class="block text-sm font-medium text-gray-700">Project Criteria & Checklist</label>
+                                <button type="button" onclick="addCriterion()" 
+                                        class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
+                                    <i class="fas fa-plus mr-2"></i>Add Criterion
+                                </button>
+                            </div>
+                            <div id="criteriaList" class="space-y-4">
+                                <!-- Criteria will be dynamically added here -->
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Comments of Assign Person</label>
+                            <textarea id="assignComments" rows="3" 
+                                      class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Remarks</label>
+                            <textarea id="remarks" rows="3" 
+                                      class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+                        </div>
+                        
+                        <div class="flex gap-4">
+                            <button type="submit" class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors">
+                                <i class="fas fa-save mr-2"></i>Save Project
+                            </button>
+                            <button type="button" onclick="showProjects()" class="bg-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-400 transition-colors">
+                                Cancel
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Project Detail View -->
+            <div id="projectDetailView" class="fade-in hidden" data-project-id="">
+                <div class="glass-effect rounded-xl p-8">
+                    <div class="flex justify-between items-start mb-6">
+                        <div>
+                            <h2 id="detailProjectName" class="text-3xl font-bold mb-2"></h2>
+                            <div class="flex flex-wrap gap-2">
+                                <span id="detailProjectStatus" class="px-3 py-1 rounded-full text-sm font-medium"></span>
+                                <span id="detailTestingStatus" class="px-3 py-1 rounded-full text-sm font-medium"></span>
+                                <span id="detailSCMProgressStatus" class="px-3 py-1 rounded-full text-sm font-medium"></span>
+                            </div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button id="editProjectBtn" onclick="editProject()" class="action-button bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors">
+                                <i class="fas fa-edit mr-2"></i>Edit
+                            </button>
+                            <button id="downloadReportBtn" onclick="downloadProjectReport()" class="excel-button text-white px-4 py-2 rounded-lg">
+                                <i class="fas fa-file-excel mr-2"></i>Download Excel Report
+                            </button>
+                            <button id="deleteProjectBtn" onclick="confirmDeleteProject()" class="action-button bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors">
+                                <i class="fas fa-trash mr-2"></i>Delete
+                            </button>
+                            <button onclick="showProjects()" class="action-button bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition-colors">
+                                <i class="fas fa-arrow-left mr-2"></i>Back
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <h3 class="text-lg font-semibold mb-4">Project Information</h3>
+                            <div class="space-y-3">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Start Date:</span>
+                                    <span id="detailStartDate" class="font-medium"></span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">End Date:</span>
+                                    <span id="detailEndDate" class="font-medium"></span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Testing Date:</span>
+                                    <span id="detailTestingDate" class="font-medium"></span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Remaining Days (Test):</span>
+                                    <span id="detailRemainingTestDays" class="font-medium"></span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">Remaining Days (End):</span>
+                                    <span id="detailRemainingEndDays" class="font-medium"></span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h3 class="text-lg font-semibold mb-4">Progress Overview</h3>
+                            <div class="space-y-4">
+                                <div>
+                                    <div class="flex justify-between mb-2">
+                                        <span class="text-gray-600">Project Progress</span>
+                                        <span id="detailProjectProgress" class="font-medium"></span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-3">
+                                        <div id="detailProjectProgressBar" class="bg-indigo-600 h-3 rounded-full transition-all duration-500"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between mb-2">
+                                        <span class="text-gray-600">SCM Progress</span>
+                                        <span id="detailSCMProgress" class="font-medium"></span>
+                                    </div>
+                                    <div class="w-full bg-gray-200 rounded-full h-3">
+                                        <div id="detailSCMProgressBar" class="bg-purple-600 h-3 rounded-full transition-all duration-500"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+                        <div>
+                            <h3 class="text-lg font-semibold mb-4">Assigned Personnel</h3>
+                            <div class="space-y-3">
+                                <div class="flex items-center gap-3">
+                                    <i class="fas fa-user text-gray-400"></i>
+                                    <div>
+                                        <p class="text-sm text-gray-600">Assign Person</p>
+                                        <p id="detailAssignPerson" class="font-medium"></p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <i class="fas fa-vial text-gray-400"></i>
+                                    <div>
+                                        <p class="text-sm text-gray-600">Testing Person</p>
+                                        <p id="detailTestingPerson" class="font-medium"></p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <i class="fas fa-award text-gray-400"></i>
+                                    <div>
+                                        <p class="text-sm text-gray-600">Quality Person</p>
+                                        <p id="detailQualityPerson" class="font-medium"></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="md:col-span-2">
+                            <h3 class="text-lg font-semibold mb-4">Additional Information</h3>
+                            <div class="space-y-4">
+                                <div>
+                                    <p class="text-sm text-gray-600 mb-1">Project Details</p>
+                                    <p id="detailProjectDetails" class="text-gray-800"></p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600 mb-1">Assign Person Comments</p>
+                                    <p id="detailAssignComments" class="text-gray-800"></p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600 mb-1">Remarks</p>
+                                    <p id="detailRemarks" class="text-gray-800"></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- User Progress Update Section -->
+                    <div id="userProgressSection" class="mt-8 hidden">
+                        <h3 class="text-lg font-semibold mb-4">Update Your Progress</h3>
+                        <div class="user-progress-form">
+                            <form id="userProgressForm" class="space-y-4">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Project Status</label>
+                                        <select id="userProjectStatus" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                            <option value="In Progress">In Progress</option>
+                                            <option value="Testing">Testing</option>
+                                            <option value="Completed">Completed</option>
+                                            <option value="Working On Delivery">Working On Delivery</option>
+                                            <option value="In Hold">In Hold</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Project Progress (%)</label>
+                                        <input type="number" id="userProjectProgress" min="0" max="100" 
+                                               class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Testing Status</label>
+                                        <select id="userTestingStatus" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                            <option value="">Not Started</option>
+                                            <option value="In Progress">In Progress</option>
+                                            <option value="Testing Failed">Testing Failed</option>
+                                            <option value="Testing Hold">Testing Hold</option>
+                                            <option value="Testing Complete">Testing Complete</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">SCM Progress (%)</label>
+                                        <input type="number" id="userSCMProgress" min="0" max="100" 
+                                               class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Your Comments</label>
+                                    <textarea id="userAssignComments" rows="3" 
+                                              class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+                                </div>
+                                
+                                <div>
+                                    <button type="submit" class="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition-colors">
+                                        <i class="fas fa-save mr-2"></i>Update Progress
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <!-- Documents Section -->
+                    <div id="documentsDetailSection" class="mt-8">
+                        <h3 class="text-lg font-semibold mb-4">Project Documents (Party Requirements)</h3>
+                        <div class="folder-structure rounded-lg p-4 mb-4">
+                            <div class="flex items-center gap-2 mb-2">
+                                <i class="fas fa-folder folder-icon text-xl"></i>
+                                <span class="font-medium">Project Folder:</span>
+                                <span id="projectFolderPath" class="text-indigo-600 font-medium"></span>
+                            </div>
+                            <p class="text-sm text-gray-600">All documents are saved in this project-specific folder</p>
+                        </div>
+                        <div id="detailDocuments" class="space-y-2">
+                            <!-- Documents will be displayed here -->
+                        </div>
+                    </div>
+                    
+                    <!-- Criteria Section -->
+                    <div id="criteriaDetailSection" class="mt-8">
+                        <h3 class="text-lg font-semibold mb-4">Project Criteria & Checklist</h3>
+                        <div id="detailCriteria" class="space-y-4">
+                            <!-- Criteria will be displayed here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Administrative View -->
+            <div id="administrativeView" class="fade-in hidden">
+                <div class="glass-effect rounded-xl p-8">
+                    <h2 class="text-2xl font-bold mb-6">Administrative Settings</h2>
+                    
+                    <!-- Tabs -->
+                    <div class="flex space-x-1 mb-6">
+                        <button onclick="showAdminTab('profile')" class="tab-button active px-4 py-2 rounded-lg" id="profileTab">
+                            <i class="fas fa-user-cog mr-2"></i>Superuser Profile
+                        </button>
+                        <button onclick="showAdminTab('users')" class="tab-button px-4 py-2 rounded-lg" id="usersTab">
+                            <i class="fas fa-users-cog mr-2"></i>User Management
+                        </button>
+                        <button onclick="showAdminTab('persons')" class="tab-button px-4 py-2 rounded-lg" id="personsTab">
+                            <i class="fas fa-user-friends mr-2"></i>Person Management
+                        </button>
+                    </div>
+                    
+                    <!-- Superuser Profile Section -->
+                    <div id="profileSection" class="admin-section">
+                        <div class="bg-white rounded-xl shadow-md p-6">
+                            <form id="superuserProfileForm" class="space-y-6">
+                                <div class="flex flex-col md:flex-row gap-8">
+                                    <div class="md:w-1/3">
+                                        <div class="profile-image-container">
+                                            <img id="superuserProfileImage" src="https://picsum.photos/seed/admin/120/120.jpg" alt="Profile" class="profile-image">
+                                            <label for="superuserImageUpload" class="profile-image-upload">
+                                                <i class="fas fa-camera"></i>
+                                            </label>
+                                            <input type="file" id="superuserImageUpload" class="hidden" accept="image/*">
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="md:w-2/3">
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">Username</label>
+                                                <input type="text" id="superuserUsername" required 
+                                                       class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                            </div>
+                                            
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">Display Name</label>
+                                                <input type="text" id="superuserDisplayName" required 
+                                                       class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                            </div>
+                                            
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">New Password</label>
+                                                <input type="password" id="superuserNewPassword" 
+                                                       class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                            </div>
+                                            
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">Confirm Password</label>
+                                                <input type="password" id="superuserConfirmPassword" 
+                                                       class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mt-6">
+                                            <button type="submit" class="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition-colors">
+                                                <i class="fas fa-save mr-2"></i>Update Profile
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <!-- User Management Section -->
+                    <div id="usersSection" class="admin-section hidden">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-xl font-semibold flex items-center">
+                                <i class="fas fa-users-cog mr-2 text-indigo-600"></i>
+                                User Management
+                            </h3>
+                            <button onclick="addNewUser()" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
+                                <i class="fas fa-user-plus mr-2"></i>Add New User
+                            </button>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <!-- User cards will be dynamically added here -->
+                            <div id="usersList"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Person Management Section -->
+                    <div id="personsSection" class="admin-section hidden">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-xl font-semibold flex items-center">
+                                <i class="fas fa-user-friends mr-2 text-indigo-600"></i>
+                                Person Management
+                            </h3>
+                            <button onclick="addNewPerson()" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
+                                <i class="fas fa-user-plus mr-2"></i>Add New Person
+                            </button>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <!-- Person cards will be dynamically added here -->
+                            <div id="personsList"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="container mx-auto px-4">
+                <p class="text-sm">2025 Project Management System, All rights reserved to Tanjil Hossen - HR & Admin Officer</p>
+            </div>
+        </footer>
+    </div>
+    
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="glass-effect rounded-xl p-8 max-w-md w-full">
+            <h3 class="text-xl font-bold mb-4">Confirm Delete</h3>
+            <p class="mb-6">Are you sure you want to delete this project? This action cannot be undone.</p>
+            <div class="flex justify-end gap-4">
+                <button onclick="closeDeleteModal()" class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition-colors">
+                    Cancel
+                </button>
+                <button onclick="deleteProject()" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors">
+                    Delete
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Document Preview Modal -->
+    <div id="documentPreviewModal" class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop flex items-center justify-center z-50 hidden">
+        <div class="glass-effect rounded-xl p-8 max-w-4xl w-full max-h-[90vh] overflow-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold">Document Preview</h3>
+                <button onclick="closeDocumentPreview()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+            
+            <div id="documentPreviewContent" class="mb-6">
+                <!-- Document preview content will be inserted here -->
+            </div>
+            
+            <div class="flex justify-between items-center">
+                <div id="documentDetails" class="text-sm text-gray-600">
+                    <!-- Document details will be inserted here -->
+                </div>
+                <button onclick="downloadCurrentDocument()" class="download-button text-white px-4 py-2 rounded-lg">
+                    <i class="fas fa-download mr-2"></i>Download Document
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- User Edit Modal -->
+    <div id="userEditModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="glass-effect rounded-xl p-8 max-w-2xl w-full">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold">Edit User</h3>
+                <button onclick="closeUserEditModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+            
+            <form id="userEditForm" class="space-y-6">
+                <input type="hidden" id="editUserId">
+                
+                <div class="flex flex-col md:flex-row gap-8">
+                    <div class="md:w-1/3">
+                        <div class="profile-image-container">
+                            <img id="editUserImage" src="https://picsum.photos/seed/user/120/120.jpg" alt="Profile" class="profile-image">
+                            <label for="editUserImageUpload" class="profile-image-upload">
+                                <i class="fas fa-camera"></i>
+                            </label>
+                            <input type="file" id="editUserImageUpload" class="hidden" accept="image/*">
+                        </div>
+                    </div>
+                    
+                    <div class="md:w-2/3">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Username</label>
+                                <input type="text" id="editUserUsername" required 
+                                       class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Display Name</label>
+                                <input type="text" id="editUserDisplayName" required 
+                                       class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">New Password</label>
+                                <input type="password" id="editUserNewPassword" 
+                                       class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Confirm Password</label>
+                                <input type="password" id="editUserConfirmPassword" 
+                                       class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6">
+                            <button type="submit" class="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition-colors">
+                                <i class="fas fa-save mr-2"></i>Update User
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Person Edit Modal -->
+    <div id="personEditModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="glass-effect rounded-xl p-8 max-w-2xl w-full">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold">Edit Person</h3>
+                <button onclick="closePersonEditModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+            
+            <form id="personEditForm" class="space-y-6">
+                <input type="hidden" id="editPersonId">
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Person Name</label>
+                        <input type="text" id="editPersonName" required 
+                               class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Roles</label>
+                        <div class="space-y-2">
+                            <label class="flex items-center">
+                                <input type="checkbox" id="editPersonAssignRole" class="mr-2">
+                                <span>Assign Person</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" id="editPersonTestingRole" class="mr-2">
+                                <span>Testing Person</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" id="editPersonQualityRole" class="mr-2">
+                                <span>Quality Person</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-6">
+                    <button type="submit" class="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition-colors">
+                        <i class="fas fa-save mr-2"></i>Update Person
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Add New Person Modal -->
+    <div id="addPersonModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="glass-effect rounded-xl p-8 max-w-md w-full">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold">Add New Person</h3>
+                <button onclick="closeAddPersonModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+            
+            <form id="addPersonForm" class="space-y-6">
+                <input type="hidden" id="addPersonType">
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Person Name</label>
+                    <input type="text" id="addPersonName" required 
+                           class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Role</label>
+                    <select id="addPersonRole" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <option value="assign">Assign Person</option>
+                        <option value="testing">Testing Person</option>
+                        <option value="quality">Quality Person</option>
+                    </select>
+                </div>
+                
+                <div class="flex gap-4">
+                    <button type="submit" class="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition-colors">
+                        <i class="fas fa-save mr-2"></i>Add Person
+                    </button>
+                    <button type="button" onclick="closeAddPersonModal()" class="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-400 transition-colors">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Notifications Container -->
+    <div id="notificationsContainer" class="fixed top-20 right-4 z-50 space-y-2"></div>
+    
+    <script>
+        // User Management
+        const users = [
+            { 
+                id: 1, 
+                username: 'admin', 
+                password: 'admin123', 
+                role: 'superuser', 
+                name: 'Administrator',
+                profileImage: 'https://picsum.photos/seed/admin/120/120.jpg'
+            },
+            { 
+                id: 2, 
+                username: 'hasabul', 
+                password: 'hasabul', 
+                role: 'user', 
+                name: 'Md. Hasabul Hashib',
+                profileImage: 'https://picsum.photos/seed/hasabul/120/120.jpg'
+            },
+            { 
+                id: 3, 
+                username: 'abrar', 
+                password: 'abrar', 
+                role: 'user', 
+                name: 'Kazi Abrar Hamim',
+                profileImage: 'https://picsum.photos/seed/abrar/120/120.jpg'
+            },
+            { 
+                id: 4, 
+                username: 'mamun', 
+                password: 'mamun', 
+                role: 'user', 
+                name: 'Md. Al Mamun',
+                profileImage: 'https://picsum.photos/seed/mamun/120/120.jpg'
+            },
+            { 
+                id: 5, 
+                username: 'riphat', 
+                password: 'riphat', 
+                role: 'user', 
+                name: 'Md. Riphat Anam',
+                profileImage: 'https://picsum.photos/seed/riphat/120/120.jpg'
+            },
+            { 
+                id: 6, 
+                username: 'hafizur', 
+                password: 'hafizur', 
+                role: 'user', 
+                name: 'Md. Hafizur Rahman',
+                profileImage: 'https://picsum.photos/seed/hafizur/120/120.jpg'
+            },
+            { 
+                id: 7, 
+                username: 'mehedi', 
+                password: 'mehedi', 
+                role: 'user', 
+                name: 'Md. Mehedi Hasan',
+                profileImage: 'https://picsum.photos/seed/mehedi/120/120.jpg'
+            },
+            { 
+                id: 8, 
+                username: 'kamal', 
+                password: 'kamal', 
+                role: 'user', 
+                name: 'Md. Kamal Uddin',
+                profileImage: 'https://picsum.photos/seed/kamal/120/120.jpg'
+            },
+            { 
+                id: 9, 
+                username: 'tanjil', 
+                password: 'tanjil', 
+                role: 'user', 
+                name: 'Tanjil Hossen',
+                profileImage: 'https://picsum.photos/seed/tanjil/120/120.jpg'
+            },
+            { 
+                id: 10, 
+                username: 'rakib', 
+                password: 'rakib', 
+                role: 'user', 
+                name: 'Rakib Hossein',
+                profileImage: 'https://picsum.photos/seed/rakib/120/120.jpg'
+            },
+            { 
+                id: 11, 
+                username: 'abdur', 
+                password: 'abdur', 
+                role: 'user', 
+                name: 'Abdur Rahman',
+                profileImage: 'https://picsum.photos/seed/abdur/120/120.jpg'
+            },
+            { 
+                id: 12, 
+                username: 'nabi', 
+                password: 'nabi', 
+                role: 'user', 
+                name: 'Nabi Alam',
+                profileImage: 'https://picsum.photos/seed/nabi/120/120.jpg'
+            }
+        ];
+        
+        // Person Management
+        let persons = [
+            { id: 1, name: 'Md. Hasabul Hashib', roles: ['assign', 'testing', 'quality'] },
+            { id: 2, name: 'Kazi Abrar Hamim', roles: ['assign', 'testing', 'quality'] },
+            { id: 3, name: 'Md. Al Mamun', roles: ['assign', 'testing', 'quality'] },
+            { id: 4, name: 'Md. Riphat Anam', roles: ['assign', 'testing', 'quality'] },
+            { id: 5, name: 'Md. Hafizur Rahman', roles: ['assign', 'testing', 'quality'] },
+            { id: 6, name: 'Md. Mehedi Hasan', roles: ['assign', 'testing', 'quality'] },
+            { id: 7, name: 'Md. Kamal Uddin', roles: ['assign', 'testing', 'quality'] },
+            { id: 8, name: 'Tanjil Hossen', roles: ['assign', 'testing', 'quality'] },
+            { id: 9, name: 'Rakib Hossein', roles: ['assign', 'testing', 'quality'] },
+            { id: 10, name: 'Abdur Rahman', roles: ['assign', 'testing', 'quality'] },
+            { id: 11, name: 'Nabi Alam', roles: ['assign', 'testing', 'quality'] }
+        ];
+        
+        let currentUser = null;
+        let projects = JSON.parse(localStorage.getItem('projects')) || [];
+        let currentView = 'dashboard';
+        let editingProjectId = null;
+        let uploadedDocuments = [];
+        let projectCriteria = [];
+        let projectToDelete = null;
+        let currentProjectForDownload = null;
+        let advancedSearchActive = false;
+        let advancedFilters = {};
+        let currentDocument = null;
+        let projectDirHandle = null;
+        let editingUserId = null;
+        let editingPersonId = null;
+        let addingPersonType = null;
+        
+        // Progress mappings
+        const projectProgressMap = {
+            'In Progress': 20,
+            'Testing': 60,
+            'Completed': 100,
+            'In Hold': 30,
+            'Cancelled': 0,
+            'Documents Submitted': 80,
+            'Documents Processing': 70,
+            'Working On Delivery': 90
+        };
+        
+        const scmProgressMap = {
+            'Not Started': 0,
+            'In Progress': 20,
+            'Party Searching': 40,
+            'Party Confirm': 60,
+            'PO/WO Process': 80,
+            'Working On Delivery': 90,
+            'Complete': 100
+        };
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if user is already logged in
+            const savedUser = localStorage.getItem('currentUser');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                showMainApp();
+            } else {
+                showLoginView();
+            }
+            
+            setupEventListeners();
+            setupDocumentUpload();
+            setupProfileImageUpload();
+        });
+        
+        // Login functionality
+        function showLoginView() {
+            document.getElementById('loginView').classList.remove('hidden');
+            document.getElementById('mainApp').classList.add('hidden');
+            // Clear login form
+            document.getElementById('loginForm').reset();
+        }
+        
+        function showMainApp() {
+            document.getElementById('loginView').classList.add('hidden');
+            document.getElementById('mainApp').classList.remove('hidden');
+            
+            // Update UI based on user role
+            updateUIForUserRole();
+            
+            // Initialize the app
+            showDashboard();
+            updateDashboardStats();
+            renderProjects();
+        }
+        
+        function updateUIForUserRole() {
+            const isSuperuser = currentUser.role === 'superuser';
+            
+            // Show/hide elements based on role
+            document.getElementById('newProjectBtn').style.display = isSuperuser ? 'block' : 'none';
+            document.getElementById('folderBtn').style.display = isSuperuser ? 'block' : 'none';
+            document.getElementById('exportMenu').style.display = isSuperuser ? 'inline-block' : 'none';
+            document.getElementById('adminBtn').style.display = isSuperuser ? 'block' : 'none';
+            document.getElementById('editProjectBtn').style.display = isSuperuser ? 'block' : 'none';
+            document.getElementById('deleteProjectBtn').style.display = isSuperuser ? 'block' : 'none';
+            document.getElementById('downloadReportBtn').style.display = isSuperuser ? 'block' : 'none';
+            document.getElementById('documentsSection').style.display = isSuperuser ? 'block' : 'none';
+            document.getElementById('criteriaSection').style.display = isSuperuser ? 'block' : 'none';
+            document.getElementById('documentsDetailSection').style.display = isSuperuser ? 'block' : 'none';
+            document.getElementById('criteriaDetailSection').style.display = isSuperuser ? 'block' : 'none';
+            
+            // Show user progress section for regular users
+            document.getElementById('userProgressSection').style.display = isSuperuser ? 'none' : 'block';
+            
+            // Update current user display
+            document.getElementById('currentUser').textContent = currentUser.name;
+            document.getElementById('currentUserImage').src = currentUser.profileImage || 'https://picsum.photos/seed/user/40/40.jpg';
+        }
+        
+        function setupEventListeners() {
+            // Login form
+            document.getElementById('loginForm').addEventListener('submit', handleLogin);
+            
+            // Project form
+            document.getElementById('projectForm').addEventListener('submit', handleProjectSubmit);
+            
+            // User progress form
+            document.getElementById('userProgressForm').addEventListener('submit', handleUserProgressSubmit);
+            
+            // Superuser profile form
+            document.getElementById('superuserProfileForm').addEventListener('submit', handleSuperuserProfileSubmit);
+            
+            // User edit form
+            document.getElementById('userEditForm').addEventListener('submit', handleUserEditSubmit);
+            
+            // Person edit form
+            document.getElementById('personEditForm').addEventListener('submit', handlePersonEditSubmit);
+            
+            // Add person form
+            document.getElementById('addPersonForm').addEventListener('submit', handleAddPersonSubmit);
+            
+            // Search
+            document.getElementById('searchProjects').addEventListener('input', function() {
+                advancedSearchActive = false;
+                renderProjects();
+            });
+            
+            // Progress updates
+            document.getElementById('projectStatus').addEventListener('change', updateProjectProgress);
+            document.getElementById('scmProgressStatus').addEventListener('change', updateSCMProgress);
+            
+            // Project folder name
+            document.getElementById('projectName').addEventListener('input', updateProjectFolderName);
+            
+            // Person dropdown change events
+            document.getElementById('assignPerson').addEventListener('change', function(e) {
+                if (e.target.value === 'add_new') {
+                    openAddPersonModal('assign');
+                }
+            });
+            
+            document.getElementById('testingPerson').addEventListener('change', function(e) {
+                if (e.target.value === 'add_new') {
+                    openAddPersonModal('testing');
+                }
+            });
+            
+            document.getElementById('qualityPerson').addEventListener('change', function(e) {
+                if (e.target.value === 'add_new') {
+                    openAddPersonModal('quality');
+                }
+            });
+        }
+        
+        function setupProfileImageUpload() {
+            // Superuser profile image upload
+            const superuserImageUpload = document.getElementById('superuserImageUpload');
+            if (superuserImageUpload) {
+                superuserImageUpload.addEventListener('change', function(e) {
+                    handleProfileImageUpload(e, 'superuserProfileImage');
+                });
+            }
+            
+            // User edit profile image upload
+            const editUserImageUpload = document.getElementById('editUserImageUpload');
+            if (editUserImageUpload) {
+                editUserImageUpload.addEventListener('change', function(e) {
+                    handleProfileImageUpload(e, 'editUserImage');
+                });
+            }
+        }
+        
+        function handleProfileImageUpload(event, previewElementId) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            if (!file.type.match('image.*')) {
+                showNotification('Please select an image file', 'error');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById(previewElementId).src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        function handleLogin(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            // Find user
+            const user = users.find(u => u.username === username && u.password === password);
+            
+            if (user) {
+                currentUser = user;
+                localStorage.setItem('currentUser', JSON.stringify(user));
+                showMainApp();
+                showNotification(`Welcome, ${user.name}!`, 'success');
+            } else {
+                showNotification('Invalid username or password', 'error');
+            }
+        }
+        
+        function handleSuperuserProfileSubmit(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('superuserUsername').value;
+            const displayName = document.getElementById('superuserDisplayName').value;
+            const newPassword = document.getElementById('superuserNewPassword').value;
+            const confirmPassword = document.getElementById('superuserConfirmPassword').value;
+            
+            // Find superuser in users array
+            const superuserIndex = users.findIndex(u => u.id === currentUser.id);
+            
+            if (superuserIndex === -1) {
+                showNotification('Superuser not found', 'error');
+                return;
+            }
+            
+            // Update username and display name
+            users[superuserIndex].username = username;
+            users[superuserIndex].name = displayName;
+            
+            // Update password if provided
+            if (newPassword) {
+                if (newPassword !== confirmPassword) {
+                    showNotification('Passwords do not match', 'error');
+                    return;
+                }
+                users[superuserIndex].password = newPassword;
+            }
+            
+            // Update profile image
+            const profileImageSrc = document.getElementById('superuserProfileImage').src;
+            users[superuserIndex].profileImage = profileImageSrc;
+            
+            // Update current user
+            currentUser = users[superuserIndex];
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            
+            // Update UI
+            document.getElementById('currentUser').textContent = currentUser.name;
+            document.getElementById('currentUserImage').src = currentUser.profileImage;
+            
+            showNotification('Profile updated successfully!', 'success');
+        }
+        
+        function handleUserEditSubmit(e) {
+            e.preventDefault();
+            
+            const userId = parseInt(document.getElementById('editUserId').value);
+            const username = document.getElementById('editUserUsername').value;
+            const displayName = document.getElementById('editUserDisplayName').value;
+            const newPassword = document.getElementById('editUserNewPassword').value;
+            const confirmPassword = document.getElementById('editUserConfirmPassword').value;
+            
+            // Find user in users array
+            const userIndex = users.findIndex(u => u.id === userId);
+            
+            if (userIndex === -1) {
+                showNotification('User not found', 'error');
+                return;
+            }
+            
+            // Update username and display name
+            users[userIndex].username = username;
+            users[userIndex].name = displayName;
+            
+            // Update password if provided
+            if (newPassword) {
+                if (newPassword !== confirmPassword) {
+                    showNotification('Passwords do not match', 'error');
+                    return;
+                }
+                users[userIndex].password = newPassword;
+            }
+            
+            // Update profile image
+            const profileImageSrc = document.getElementById('editUserImage').src;
+            users[userIndex].profileImage = profileImageSrc;
+            
+            // Update current user if editing self
+            if (currentUser.id === userId) {
+                currentUser = users[userIndex];
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                document.getElementById('currentUser').textContent = currentUser.name;
+                document.getElementById('currentUserImage').src = currentUser.profileImage;
+            }
+            
+            // Close modal and refresh users list
+            closeUserEditModal();
+            renderUsersList();
+            
+            showNotification('User updated successfully!', 'success');
+        }
+        
+        function handlePersonEditSubmit(e) {
+            e.preventDefault();
+            
+            const personId = parseInt(document.getElementById('editPersonId').value);
+            const personName = document.getElementById('editPersonName').value;
+            const assignRole = document.getElementById('editPersonAssignRole').checked;
+            const testingRole = document.getElementById('editPersonTestingRole').checked;
+            const qualityRole = document.getElementById('editPersonQualityRole').checked;
+            
+            // Find person in persons array
+            const personIndex = persons.findIndex(p => p.id === personId);
+            
+            if (personIndex === -1) {
+                showNotification('Person not found', 'error');
+                return;
+            }
+            
+            // Update person data
+            persons[personIndex].name = personName;
+            persons[personIndex].roles = [];
+            
+            if (assignRole) persons[personIndex].roles.push('assign');
+            if (testingRole) persons[personIndex].roles.push('testing');
+            if (qualityRole) persons[personIndex].roles.push('quality');
+            
+            // Close modal and refresh persons list
+            closePersonEditModal();
+            renderPersonsList();
+            
+            // Update dropdowns
+            updatePersonDropdowns();
+            
+            showNotification('Person updated successfully!', 'success');
+        }
+        
+        function handleAddPersonSubmit(e) {
+            e.preventDefault();
+            
+            const personName = document.getElementById('addPersonName').value;
+            const personRole = document.getElementById('addPersonRole').value;
+            const personType = document.getElementById('addPersonType').value;
+            
+            // Check if person already exists
+            const existingPerson = persons.find(p => p.name.toLowerCase() === personName.toLowerCase());
+            
+            if (existingPerson) {
+                // If person exists, just add the role if not already present
+                if (!existingPerson.roles.includes(personRole)) {
+                    existingPerson.roles.push(personRole);
+                    showNotification(`Role added to existing person: ${personName}`, 'success');
+                } else {
+                    showNotification(`Person already has this role: ${personName}`, 'info');
+                }
+            } else {
+                // Create new person
+                const newPerson = {
+                    id: Math.max(...persons.map(p => p.id), 0) + 1,
+                    name: personName,
+                    roles: [personRole]
+                };
+                
+                persons.push(newPerson);
+                showNotification(`New person added: ${personName}`, 'success');
+            }
+            
+            // Close modal and update dropdowns
+            closeAddPersonModal();
+            updatePersonDropdowns();
+            
+            // Set the dropdown value to the newly added person
+            if (personType === 'assign') {
+                document.getElementById('assignPerson').value = personName;
+            } else if (personType === 'testing') {
+                document.getElementById('testingPerson').value = personName;
+            } else if (personType === 'quality') {
+                document.getElementById('qualityPerson').value = personName;
+            }
+        }
+        
+        function handleUserProgressSubmit(e) {
+            e.preventDefault();
+            
+            const projectId = parseInt(document.getElementById('projectDetailView').getAttribute('data-project-id'));
+            const project = projects.find(p => p.id === projectId);
+            
+            if (!project) return;
+            
+            // Update project with user progress
+            project.status = document.getElementById('userProjectStatus').value;
+            project.projectProgress = parseInt(document.getElementById('userProjectProgress').value);
+            project.testingStatus = document.getElementById('userTestingStatus').value;
+            project.scmProgress = parseInt(document.getElementById('userSCMProgress').value);
+            project.assignComments = document.getElementById('userAssignComments').value;
+            project.updatedAt = new Date().toISOString();
+            
+            // Save to localStorage
+            localStorage.setItem('projects', JSON.stringify(projects));
+            
+            // Refresh the view
+            showProjectDetail(projectId);
+            showNotification('Progress updated successfully!', 'success');
+        }
+        
+        // Administrative functions
+        function showAdministrative() {
+            hideAllViews();
+            document.getElementById('administrativeView').classList.remove('hidden');
+            currentView = 'administrative';
+            
+            // Show default tab
+            showAdminTab('profile');
+        }
+        
+        function showAdminTab(tabName) {
+            // Hide all sections
+            document.querySelectorAll('.admin-section').forEach(section => {
+                section.classList.add('hidden');
+            });
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab-button').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected section
+            document.getElementById(tabName + 'Section').classList.remove('hidden');
+            document.getElementById(tabName + 'Tab').classList.add('active');
+            
+            // Populate section data
+            if (tabName === 'profile') {
+                const superuser = users.find(u => u.role === 'superuser');
+                if (superuser) {
+                    document.getElementById('superuserUsername').value = superuser.username;
+                    document.getElementById('superuserDisplayName').value = superuser.name;
+                    document.getElementById('superuserProfileImage').src = superuser.profileImage;
+                }
+            } else if (tabName === 'users') {
+                renderUsersList();
+            } else if (tabName === 'persons') {
+                renderPersonsList();
+            }
+        }
+        
+        function renderUsersList() {
+            const container = document.getElementById('usersList');
+            container.innerHTML = '';
+            
+            // Filter out superuser
+            const regularUsers = users.filter(u => u.role === 'user');
+            
+            if (regularUsers.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 col-span-full text-center py-8">No users found</p>';
+                return;
+            }
+            
+            regularUsers.forEach(user => {
+                const userCard = document.createElement('div');
+                userCard.className = 'user-card glass-effect rounded-xl p-6';
+                userCard.innerHTML = `
+                    <div class="flex flex-col items-center">
+                        <img src="${user.profileImage}" alt="${user.name}" class="w-24 h-24 rounded-full object-cover mb-4 border-4 border-white shadow">
+                        <h4 class="text-lg font-semibold">${user.name}</h4>
+                        <p class="text-gray-600 text-sm mb-2">@${user.username}</p>
+                        <span class="px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mb-4">
+                            ${user.role === 'superuser' ? 'Superuser' : 'User'}
+                        </span>
+                        <div class="flex gap-2">
+                            <button onclick="editUser(${user.id})" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors">
+                                <i class="fas fa-edit mr-1"></i>Edit
+                            </button>
+                            <button onclick="resetUserPassword(${user.id})" class="bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 transition-colors">
+                                <i class="fas fa-key mr-1"></i>Reset Password
+                            </button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(userCard);
+            });
+        }
+        
+        function renderPersonsList() {
+            const container = document.getElementById('personsList');
+            container.innerHTML = '';
+            
+            if (persons.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 col-span-full text-center py-8">No persons found</p>';
+                return;
+            }
+            
+            persons.forEach(person => {
+                const personCard = document.createElement('div');
+                personCard.className = 'person-card glass-effect rounded-xl p-6';
+                
+                const roleBadges = person.roles.map(role => {
+                    let roleClass = '';
+                    let roleText = '';
+                    
+                    switch(role) {
+                        case 'assign':
+                            roleClass = 'assign';
+                            roleText = 'Assign';
+                            break;
+                        case 'testing':
+                            roleClass = 'testing';
+                            roleText = 'Testing';
+                            break;
+                        case 'quality':
+                            roleClass = 'quality';
+                            roleText = 'Quality';
+                            break;
+                    }
+                    
+                    return `<span class="role-badge ${roleClass}">${roleText}</span>`;
+                }).join('');
+                
+                personCard.innerHTML = `
+                    <div class="flex flex-col items-center">
+                        <div class="w-24 h-24 rounded-full bg-indigo-100 flex items-center justify-center mb-4">
+                            <i class="fas fa-user text-indigo-600 text-3xl"></i>
+                        </div>
+                        <h4 class="text-lg font-semibold">${person.name}</h4>
+                        <div class="mt-2 mb-4">
+                            ${roleBadges}
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="editPerson(${person.id})" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors">
+                                <i class="fas fa-edit mr-1"></i>Edit
+                            </button>
+                            <button onclick="deletePerson(${person.id})" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors">
+                                <i class="fas fa-trash mr-1"></i>Delete
+                            </button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(personCard);
+            });
+        }
+        
+        function editUser(userId) {
+            const user = users.find(u => u.id === userId);
+            if (!user) return;
+            
+            editingUserId = userId;
+            
+            // Populate form
+            document.getElementById('editUserId').value = user.id;
+            document.getElementById('editUserUsername').value = user.username;
+            document.getElementById('editUserDisplayName').value = user.name;
+            document.getElementById('editUserImage').src = user.profileImage;
+            document.getElementById('editUserNewPassword').value = '';
+            document.getElementById('editUserConfirmPassword').value = '';
+            
+            // Show modal
+            document.getElementById('userEditModal').classList.remove('hidden');
+        }
+        
+        function closeUserEditModal() {
+            document.getElementById('userEditModal').classList.add('hidden');
+            editingUserId = null;
+        }
+        
+        function addNewUser() {
+            // Generate a new user ID
+            const newUserId = Math.max(...users.map(u => u.id)) + 1;
+            
+            // Create a new user object
+            const newUser = {
+                id: newUserId,
+                username: `newuser${newUserId}`,
+                password: 'password',
+                role: 'user',
+                name: `New User ${newUserId}`,
+                profileImage: `https://picsum.photos/seed/newuser${newUserId}/120/120.jpg`
+            };
+            
+            // Add to users array
+            users.push(newUser);
+            
+            // Open edit modal for the new user
+            editUser(newUserId);
+        }
+        
+        function resetUserPassword(userId) {
+            const user = users.find(u => u.id === userId);
+            if (!user) return;
+            
+            if (confirm(`Are you sure you want to reset the password for ${user.name}? The new password will be set to their username.`)) {
+                user.password = user.username;
+                showNotification(`Password reset for ${user.name}. New password: ${user.username}`, 'success');
+            }
+        }
+        
+        // Person management functions
+        function addNewPerson() {
+            // Generate a new person ID
+            const newPersonId = Math.max(...persons.map(p => p.id), 0) + 1;
+            
+            // Create a new person object
+            const newPerson = {
+                id: newPersonId,
+                name: 'New Person',
+                roles: ['assign', 'testing', 'quality']
+            };
+            
+            // Add to persons array
+            persons.push(newPerson);
+            
+            // Open edit modal for the new person
+            editPerson(newPersonId);
+        }
+        
+        function editPerson(personId) {
+            const person = persons.find(p => p.id === personId);
+            if (!person) return;
+            
+            editingPersonId = personId;
+            
+            // Populate form
+            document.getElementById('editPersonId').value = person.id;
+            document.getElementById('editPersonName').value = person.name;
+            document.getElementById('editPersonAssignRole').checked = person.roles.includes('assign');
+            document.getElementById('editPersonTestingRole').checked = person.roles.includes('testing');
+            document.getElementById('editPersonQualityRole').checked = person.roles.includes('quality');
+            
+            // Show modal
+            document.getElementById('personEditModal').classList.remove('hidden');
+        }
+        
+        function closePersonEditModal() {
+            document.getElementById('personEditModal').classList.add('hidden');
+            editingPersonId = null;
+        }
+        
+        function deletePerson(personId) {
+            const person = persons.find(p => p.id === personId);
+            if (!person) return;
+            
+            if (confirm(`Are you sure you want to delete ${person.name}? This action cannot be undone.`)) {
+                // Remove from persons array
+                persons = persons.filter(p => p.id !== personId);
+                
+                // Refresh list and dropdowns
+                renderPersonsList();
+                updatePersonDropdowns();
+                
+                showNotification(`${person.name} has been deleted successfully!`, 'success');
+            }
+        }
+        
+        // Add new person modal functions
+        function openAddPersonModal(personType) {
+            addingPersonType = personType;
+            
+            // Reset form
+            document.getElementById('addPersonForm').reset();
+            document.getElementById('addPersonType').value = personType;
+            
+            // Set default role based on person type
+            document.getElementById('addPersonRole').value = personType;
+            
+            // Show modal
+            document.getElementById('addPersonModal').classList.remove('hidden');
+        }
+        
+        function closeAddPersonModal() {
+            document.getElementById('addPersonModal').classList.add('hidden');
+            addingPersonType = null;
+        }
+        
+        function updatePersonDropdowns() {
+            // Update assign person dropdown
+            const assignSelect = document.getElementById('assignPerson');
+            const testingSelect = document.getElementById('testingPerson');
+            const qualitySelect = document.getElementById('qualityPerson');
+            
+            // Clear existing options except the first one
+            assignSelect.innerHTML = '<option value="">Select Person</option>';
+            testingSelect.innerHTML = '<option value="">Select Person</option>';
+            qualitySelect.innerHTML = '<option value="">Select Person</option>';
+            
+            // Add persons with appropriate roles
+            persons.forEach(person => {
+                if (person.roles.includes('assign')) {
+                    const option = document.createElement('option');
+                    option.value = person.name;
+                    option.textContent = person.name;
+                    assignSelect.appendChild(option);
+                }
+                
+                if (person.roles.includes('testing')) {
+                    const option = document.createElement('option');
+                    option.value = person.name;
+                    option.textContent = person.name;
+                    testingSelect.appendChild(option);
+                }
+                
+                if (person.roles.includes('quality')) {
+                    const option = document.createElement('option');
+                    option.value = person.name;
+                    option.textContent = person.name;
+                    qualitySelect.appendChild(option);
+                }
+            });
+            
+            // Add "Add New Person" option for superusers
+            if (currentUser && currentUser.role === 'superuser') {
+                const addOptionAssign = document.createElement('option');
+                addOptionAssign.value = 'add_new';
+                addOptionAssign.textContent = 'Add New Person...';
+                addOptionAssign.className = 'add-person-option';
+                assignSelect.appendChild(addOptionAssign);
+                
+                const addOptionTesting = document.createElement('option');
+                addOptionTesting.value = 'add_new';
+                addOptionTesting.textContent = 'Add New Person...';
+                addOptionTesting.className = 'add-person-option';
+                testingSelect.appendChild(addOptionTesting);
+                
+                const addOptionQuality = document.createElement('option');
+                addOptionQuality.value = 'add_new';
+                addOptionQuality.textContent = 'Add New Person...';
+                addOptionQuality.className = 'add-person-option';
+                qualitySelect.appendChild(addOptionQuality);
+            }
+            
+            // Also update search dropdown
+            const searchAssignPerson = document.getElementById('searchAssignPerson');
+            searchAssignPerson.innerHTML = '<option value="">All Persons</option>';
+            persons.forEach(person => {
+                if (person.roles.includes('assign')) {
+                    const option = document.createElement('option');
+                    option.value = person.name;
+                    option.textContent = person.name;
+                    searchAssignPerson.appendChild(option);
+                }
+            });
+        }
+        
+        // Logout function
+        function logout() {
+            // Clear current user data
+            currentUser = null;
+            
+            // Remove from localStorage
+            localStorage.removeItem('currentUser');
+            
+            // Show login view
+            showLoginView();
+            
+            // Show notification
+            showNotification('You have been logged out successfully', 'info');
+        }
+        
+        // Update project folder name display
+        function updateProjectFolderName() {
+            const projectName = document.getElementById('projectName').value || 'Project Name';
+            const sanitizedProjectName = sanitizeProjectName(projectName);
+            document.getElementById('projectFolderName').textContent = sanitizedProjectName;
+        }
+        
+        // Sanitize project name for folder structure
+        function sanitizeProjectName(name) {
+            return name.replace(/[^a-zA-Z0-9\s\-_]/g, '').replace(/\s+/g, '_');
+        }
+        
+        // Progress update functions
+        function updateProjectProgress() {
+            const status = document.getElementById('projectStatus').value;
+            const progress = projectProgressMap[status] || 0;
+            document.getElementById('projectProgress').value = progress;
+        }
+        
+        function updateSCMProgress() {
+            const status = document.getElementById('scmProgressStatus').value;
+            const progress = scmProgressMap[status] || 0;
+            document.getElementById('scmProgress').value = progress;
+        }
+        
+        // Search functions
+        function toggleSearchPanel() {
+            const panel = document.getElementById('searchPanel');
+            if (panel.classList.contains('collapsed')) {
+                panel.classList.remove('collapsed');
+                panel.classList.add('expanded');
+            } else {
+                panel.classList.remove('expanded');
+                panel.classList.add('collapsed');
+            }
+        }
+        
+        function performAdvancedSearch() {
+            advancedFilters = {
+                name: document.getElementById('searchProjectName').value.toLowerCase(),
+                status: document.getElementById('searchProjectStatus').value,
+                startDateFrom: document.getElementById('searchStartDateFrom').value,
+                startDateTo: document.getElementById('searchStartDateTo').value,
+                endDateFrom: document.getElementById('searchEndDateFrom').value,
+                endDateTo: document.getElementById('searchEndDateTo').value,
+                assignPerson: document.getElementById('searchAssignPerson').value
+            };
+            
+            advancedSearchActive = true;
+            renderProjects();
+        }
+        
+        function renderProjects() {
+            const container = document.getElementById('projectsGrid');
+            let filteredProjects = [];
+            
+            // Filter projects based on user role
+            let projectsToFilter = projects;
+            if (currentUser && currentUser.role === 'user') {
+                projectsToFilter = projects.filter(p => p.assignPerson === currentUser.name);
+            }
+            
+            if (advancedSearchActive) {
+                filteredProjects = projectsToFilter.filter(project => {
+                    // Name filter
+                    if (advancedFilters.name && !project.name.toLowerCase().includes(advancedFilters.name)) {
+                        return false;
+                    }
+                    
+                    // Status filter
+                    if (advancedFilters.status && project.status !== advancedFilters.status) {
+                        return false;
+                    }
+                    
+                    // Start date range filter
+                    if (advancedFilters.startDateFrom && project.startDate < advancedFilters.startDateFrom) {
+                        return false;
+                    }
+                    if (advancedFilters.startDateTo && project.startDate > advancedFilters.startDateTo) {
+                        return false;
+                    }
+                    
+                    // End date range filter
+                    if (advancedFilters.endDateFrom && project.endDate < advancedFilters.endDateFrom) {
+                        return false;
+                    }
+                    if (advancedFilters.endDateTo && project.endDate > advancedFilters.endDateTo) {
+                        return false;
+                    }
+                    
+                    // Assign person filter
+                    if (advancedFilters.assignPerson && project.assignPerson !== advancedFilters.assignPerson) {
+                        return false;
+                    }
+                    
+                    return true;
+                });
+            } else {
+                const searchTerm = document.getElementById('searchProjects').value.toLowerCase();
+                filteredProjects = projectsToFilter.filter(project => {
+                    const matchesSearch = project.name.toLowerCase().includes(searchTerm) ||
+                                        (project.details && project.details.toLowerCase().includes(searchTerm));
+                    return matchesSearch;
+                });
+            }
+            
+            container.innerHTML = filteredProjects.map(project => {
+                const remainingTestDays = calculateRemainingDays(project.testingDate);
+                const remainingEndDays = calculateRemainingDays(project.endDate);
+                
+                return `
+                    <div class="glass-effect rounded-xl p-6 hover-scale cursor-pointer" onclick="showProjectDetail(${project.id})">
+                        <div class="flex justify-between items-start mb-4">
+                            <h3 class="text-lg font-semibold">${project.name}</h3>
+                            <div class="flex flex-col gap-1">
+                                <span class="px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(project.status)}">
+                                    ${project.status}
+                                </span>
+                                ${project.testingStatus ? `<span class="px-2 py-1 rounded-full text-xs font-medium ${getTestingStatusColor(project.testingStatus)}">
+                                    ${project.testingStatus}
+                                </span>` : ''}
+                                ${project.scmProgressStatus ? `<span class="px-2 py-1 rounded-full text-xs font-medium ${getSCMStatusColor(project.scmProgressStatus)}">
+                                    ${project.scmProgressStatus}
+                                </span>` : ''}
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-3">
+                            <div>
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span class="text-gray-600">Progress</span>
+                                    <span class="font-medium">${project.projectProgress}%</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2">
+                                    <div class="bg-indigo-600 h-2 rounded-full" style="width: ${project.projectProgress}%"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="grid grid-cols-2 gap-2 text-sm">
+                                <div>
+                                    <p class="text-gray-600">Test Days Left</p>
+                                    <p class="font-medium ${remainingTestDays < 7 ? 'text-red-600' : ''}">${remainingTestDays}</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-600">End Days Left</p>
+                                    <p class="font-medium ${remainingEndDays < 7 ? 'text-red-600' : ''}">${remainingEndDays}</p>
+                                </div>
+                            </div>
+                            
+                            <div class="text-sm">
+                                <p class="text-gray-600">Assigned to: ${project.assignPerson}</p>
+                            </div>
+                            
+                            ${project.documents && project.documents.length > 0 ? `
+                                <div class="text-sm">
+                                    <p class="text-gray-600">Documents: ${project.documents.length} uploaded</p>
+                                </div>
+                            ` : ''}
+                            
+                            ${project.criteria && project.criteria.length > 0 ? `
+                                <div class="text-sm">
+                                    <p class="text-gray-600">Criteria: ${project.criteria.length} defined</p>
+                                </div>
+                            ` : ''}
+                            
+                            <div class="flex justify-end gap-2 mt-4">
+                                ${currentUser.role === 'superuser' ? `
+                                    <button onclick="event.stopPropagation(); editProjectById(${project.id})" 
+                                            class="action-button bg-indigo-600 text-white px-3 py-1 rounded-lg hover:bg-indigo-700 transition-colors text-sm">
+                                        <i class="fas fa-edit mr-1"></i>Edit
+                                    </button>
+                                    <button onclick="event.stopPropagation(); downloadProjectReportById(${project.id})" 
+                                            class="excel-button text-white px-3 py-1 rounded-lg text-sm">
+                                        <i class="fas fa-file-excel mr-1"></i>Excel
+                                    </button>
+                                    <button onclick="event.stopPropagation(); confirmDeleteProjectById(${project.id})" 
+                                            class="action-button bg-red-600 text-white px-3 py-1 rounded-lg hover:bg-red-700 transition-colors text-sm">
+                                        <i class="fas fa-trash mr-1"></i>Delete
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // Download functions
+        function downloadProjectReport() {
+            const projectId = parseInt(document.getElementById('projectDetailView').getAttribute('data-project-id'));
+            downloadProjectReportById(projectId);
+        }
+        
+        function downloadProjectReportById(projectId) {
+            const project = projects.find(p => p.id === projectId);
+            if (!project) return;
+            
+            // Check if XLSX library is loaded
+            if (typeof XLSX === 'undefined') {
+                showNotification('Excel library not loaded. Please refresh the page and try again.', 'error');
+                return;
+            }
+            
+            generateProjectReportExcel(project);
+            showNotification('Project Excel report downloaded successfully!', 'success');
+        }
+        
+        function generateProjectReportExcel(project) {
+            // Create a new workbook
+            const wb = XLSX.utils.book_new();
+            
+            // Create worksheet data
+            const wsData = [];
+            
+            // Add title
+            wsData.push(['Project Report']);
+            wsData.push([project.name]);
+            wsData.push(['Generated on: ' + new Date().toLocaleDateString()]);
+            wsData.push([]);
+            
+            // Project Overview Section
+            wsData.push(['Project Overview']);
+            wsData.push(['Project Name', project.name]);
+            wsData.push(['Status', project.status]);
+            wsData.push(['Start Date', formatDate(project.startDate)]);
+            wsData.push(['End Date', formatDate(project.endDate)]);
+            wsData.push(['Testing Date', formatDate(project.testingDate)]);
+            wsData.push(['Remaining Days (Test)', calculateRemainingDays(project.testingDate)]);
+            wsData.push(['Remaining Days (End)', calculateRemainingDays(project.endDate)]);
+            wsData.push([]);
+            
+            // Progress Overview
+            wsData.push(['Progress Overview']);
+            wsData.push(['Project Progress', project.projectProgress + '%']);
+            wsData.push(['SCM Progress', project.scmProgress + '%']);
+            wsData.push([]);
+            
+            // Status Information
+            wsData.push(['Status Information']);
+            wsData.push(['Testing Status', project.testingStatus || 'Not Started']);
+            wsData.push(['SCM Progress Status', project.scmProgressStatus || 'Not Started']);
+            wsData.push([]);
+            
+            // Assigned Personnel
+            wsData.push(['Assigned Personnel']);
+            wsData.push(['Assign Person', project.assignPerson || 'Not assigned']);
+            wsData.push(['Testing Person', project.testingPerson || 'Not assigned']);
+            wsData.push(['Quality Person', project.qualityPerson || 'Not assigned']);
+            wsData.push([]);
+            
+            // Additional Information
+            wsData.push(['Additional Information']);
+            wsData.push(['Project Details', project.details || 'No details provided']);
+            wsData.push(['Assign Person Comments', project.assignComments || 'No comments']);
+            wsData.push(['Remarks', project.remarks || 'No remarks']);
+            wsData.push([]);
+            
+            // Documents
+            if (project.documents && project.documents.length > 0) {
+                wsData.push(['Documents']);
+                wsData.push(['Document Name', 'Size (KB)', 'Upload Date', 'Folder Path']);
+                project.documents.forEach(doc => {
+                    wsData.push([doc.name, (doc.size / 1024).toFixed(2), new Date(doc.uploadDate).toLocaleDateString(), doc.folderPath]);
+                });
+                wsData.push([]);
+            } else {
+                wsData.push(['Documents']);
+                wsData.push(['No documents uploaded']);
+                wsData.push([]);
+            }
+            
+            // Criteria
+            if (project.criteria && project.criteria.length > 0) {
+                project.criteria.forEach(criterion => {
+                    wsData.push(['Criterion: ' + criterion.name]);
+                    wsData.push(['Checklist Item', 'Status']);
+                    criterion.checklist.forEach(item => {
+                        wsData.push([item.text, item.checked ? 'Completed' : 'Pending']);
+                    });
+                    wsData.push([]);
+                });
+            } else {
+                wsData.push(['Criteria']);
+                wsData.push(['No criteria defined']);
+            }
+            
+            // Create worksheet
+            const ws = XLSX.utils.aoa_to_sheet(wsData);
+            
+            // Set column widths
+            ws['!cols'] = [
+                { wch: 30 }, // Column A
+                { wch: 30 }, // Column B
+                { wch: 20 }, // Column C
+                { wch: 40 }  // Column D
+            ];
+            
+            // Add styling to headers
+            const range = XLSX.utils.decode_range(ws['!ref']);
+            for (let C = range.s.c; C <= range.e.c; ++C) {
+                for (let R = range.s.r; R <= range.e.r; ++R) {
+                    const cellAddress = { c: C, r: R };
+                    const cellRef = XLSX.utils.encode_cell(cellAddress);
+                    
+                    // Style for section headers
+                    if (R === 4 || R === 9 || R === 13 || R === 17 || R === 22 || 
+                        (R >= 27 && R <= 29) || 
+                        (project.documents && project.documents.length > 0 && R === 32) || 
+                        (project.criteria && project.criteria.length > 0 && R >= 35)) {
+                        if (!ws[cellRef]) ws[cellRef] = {};
+                        ws[cellRef].s = {
+                            font: { bold: true },
+                            fill: { fgColor: { rgb: "E0E0E0" } }
+                        };
+                    }
+                    
+                    // Style for title
+                    if (R === 0) {
+                        if (!ws[cellRef]) ws[cellRef] = {};
+                        ws[cellRef].s = {
+                            font: { bold: true, sz: 16 },
+                            alignment: { horizontal: "center" }
+                        };
+                    }
+                }
+            }
+            
+            // Add the worksheet to the workbook
+            XLSX.utils.book_append_sheet(wb, ws, "Project Report");
+            
+            // Generate Excel file and trigger download
+            XLSX.writeFile(wb, `${project.name}_Report.xlsx`);
+        }
+        
+        // Export functions
+        function exportAllDataAsZip() {
+            if (!projects || projects.length === 0) {
+                showNotification('No data to export', 'error');
+                return;
+            }
+            
+            if (typeof JSZip === 'undefined') {
+                showNotification('JSZip library not loaded. Please refresh the page and try again.', 'error');
+                return;
+            }
+            
+            const zip = new JSZip();
+            const projectsFolder = zip.folder("projects");
+            
+            // Add all projects data as JSON
+            const allData = {
+                projects: projects,
+                persons: persons,
+                exportDate: new Date().toISOString()
+            };
+            zip.file("project_data.json", JSON.stringify(allData, null, 2));
+            
+            // Add each project's documents
+            projects.forEach(project => {
+                const sanitizedProjectName = sanitizeProjectName(project.name);
+                const projectFolder = projectsFolder.folder(sanitizedProjectName);
+                
+                // Add project details as JSON
+                projectFolder.file(`${sanitizedProjectName}_details.json`, JSON.stringify(project, null, 2));
+                
+                // Add documents if they exist
+                if (project.documents && project.documents.length > 0) {
+                    const documentsFolder = projectFolder.folder("documents");
+                    
+                    project.documents.forEach((doc, index) => {
+                        // Extract the base64 data
+                        const base64Data = doc.data.split(',')[1];
+                        const binaryData = atob(base64Data);
+                        const array = new Uint8Array(binaryData.length);
+                        
+                        for (let i = 0; i < binaryData.length; i++) {
+                            array[i] = binaryData.charCodeAt(i);
+                        }
+                        
+                        documentsFolder.file(doc.name, array);
+                    });
+                }
+            });
+            
+            // Generate and download the ZIP file
+            zip.generateAsync({ type: "blob" }).then(function(content) {
+                saveAs(content, `Project_Data_${new Date().toISOString().split('T')[0]}.zip`);
+                showNotification('All data exported successfully!', 'success');
+            });
+        }
+        
+        function exportDataAsJSON() {
+            if (!projects || projects.length === 0) {
+                showNotification('No data to export', 'error');
+                return;
+            }
+            
+            const dataStr = JSON.stringify({
+                projects: projects,
+                persons: persons,
+                exportDate: new Date().toISOString()
+            }, null, 2);
+            
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportFileDefaultName = `Project_Data_${new Date().toISOString().split('T')[0]}.json`;
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+            
+            showNotification('Data exported successfully!', 'success');
+        }
+        
+        // Folder linking functions
+        async function setupProjectFolder() {
+            try {
+                // Request access to a directory
+                const dirHandle = await window.showDirectoryPicker();
+                
+                // Save the directory handle for later use
+                projectDirHandle = dirHandle;
+                localStorage.setItem('projectDirHandle', JSON.stringify({
+                    name: dirHandle.name,
+                    // Note: The handle itself can't be stored directly, 
+                    // you'll need to request access each time
+                }));
+                
+                showNotification('Project folder linked successfully!', 'success');
+                return dirHandle;
+            } catch (error) {
+                console.error('Error accessing folder:', error);
+                showNotification('Failed to access folder. Please try again.', 'error');
+                return null;
+            }
+        }
+        
+        // Function to save a project to the linked folder
+        async function saveProjectToFolder(project, dirHandle) {
+            if (!dirHandle) return;
+            
+            try {
+                // Create a folder for the project
+                const sanitizedProjectName = sanitizeProjectName(project.name);
+                const projectFolder = await dirHandle.getDirectoryHandle(sanitizedProjectName, { create: true });
+                
+                // Save project data as JSON
+                const projectDataFile = await projectFolder.getFileHandle(`${sanitizedProjectName}_data.json`, { create: true });
+                const writableData = await projectDataFile.createWritable();
+                await writableData.write(JSON.stringify(project, null, 2));
+                await writableData.close();
+                
+                // Save documents if they exist
+                if (project.documents && project.documents.length > 0) {
+                    const docsFolder = await projectFolder.getDirectoryHandle('documents', { create: true });
+                    
+                    for (const doc of project.documents) {
+                        // Extract base64 data and convert to blob
+                        const base64Data = doc.data.split(',')[1];
+                        const byteCharacters = atob(base64Data);
+                        const byteNumbers = new Array(byteCharacters.length);
+                        
+                        for (let i = 0; i < byteCharacters.length; i++) {
+                            byteNumbers[i] = byteCharacters.charCodeAt(i);
+                        }
+                        
+                        const byteArray = new Uint8Array(byteNumbers);
+                        const blob = new Blob([byteArray], { type: doc.type });
+                        
+                        // Save the document
+                        const docFile = await docsFolder.getFileHandle(doc.name, { create: true });
+                        const writableDoc = await docFile.createWritable();
+                        await writableDoc.write(blob);
+                        await writableDoc.close();
+                    }
+                }
+                
+                showNotification(`Project "${project.name}" saved to folder successfully!`, 'success');
+            } catch (error) {
+                console.error('Error saving project to folder:', error);
+                showNotification('Failed to save project to folder.', 'error');
+            }
+        }
+        
+        // Export all projects to Excel
+        function exportAllProjectsToExcel() {
+            if (!projects || projects.length === 0) {
+                showNotification('No projects to export', 'error');
+                return;
+            }
+            
+            // Check if XLSX library is loaded
+            if (typeof XLSX === 'undefined') {
+                showNotification('Excel library not loaded. Please refresh the page and try again.', 'error');
+                return;
+            }
+            
+            // Create a new workbook
+            const wb = XLSX.utils.book_new();
+            
+            // Create summary sheet
+            const summaryData = [
+                ['All Projects Summary'],
+                ['Generated on: ' + new Date().toLocaleDateString()],
+                [],
+                ['Project Name', 'Status', 'Start Date', 'End Date', 'Progress', 'Assign Person', 'Testing Status', 'SCM Status']
+            ];
+            
+            // Add project data to summary
+            projects.forEach(project => {
+                summaryData.push([
+                    project.name,
+                    project.status,
+                    formatDate(project.startDate),
+                    formatDate(project.endDate),
+                    project.projectProgress + '%',
+                    project.assignPerson || 'Not assigned',
+                    project.testingStatus || 'Not started',
+                    project.scmProgressStatus || 'Not started'
+                ]);
+            });
+            
+            // Create summary worksheet
+            const summaryWs = XLSX.utils.aoa_to_sheet(summaryData);
+            
+            // Set column widths for summary
+            summaryWs['!cols'] = [
+                { wch: 30 }, // Project Name
+                { wch: 15 }, // Status
+                { wch: 15 }, // Start Date
+                { wch: 15 }, // End Date
+                { wch: 10 }, // Progress
+                { wch: 20 }, // Assign Person
+                { wch: 15 }, // Testing Status
+                { wch: 15 }  // SCM Status
+            ];
+            
+            // Add styling to summary headers
+            const summaryRange = XLSX.utils.decode_range(summaryWs['!ref']);
+            for (let C = summaryRange.s.c; C <= summaryRange.e.c; ++C) {
+                const cellAddress = { c: C, r: 3 }; // Header row
+                const cellRef = XLSX.utils.encode_cell(cellAddress);
+                
+                if (!summaryWs[cellRef]) summaryWs[cellRef] = {};
+                summaryWs[cellRef].s = {
+                    font: { bold: true },
+                    fill: { fgColor: { rgb: "E0E0E0" } }
+                };
+            }
+            
+            // Add summary worksheet to workbook
+            XLSX.utils.book_append_sheet(wb, summaryWs, "Summary");
+            
+            // Create detailed sheets for each project
+            projects.forEach(project => {
+                const sanitizedProjectName = sanitizeProjectName(project.name).substring(0, 30); // Limit sheet name length
+                
+                // Create worksheet data (similar to generateProjectReportExcel)
+                const wsData = [];
+                
+                // Add title
+                wsData.push(['Project Report']);
+                wsData.push([project.name]);
+                wsData.push(['Generated on: ' + new Date().toLocaleDateString()]);
+                wsData.push([]);
+                
+                // Project Overview Section
+                wsData.push(['Project Overview']);
+                wsData.push(['Project Name', project.name]);
+                wsData.push(['Status', project.status]);
+                wsData.push(['Start Date', formatDate(project.startDate)]);
+                wsData.push(['End Date', formatDate(project.endDate)]);
+                wsData.push(['Testing Date', formatDate(project.testingDate)]);
+                wsData.push(['Remaining Days (Test)', calculateRemainingDays(project.testingDate)]);
+                wsData.push(['Remaining Days (End)', calculateRemainingDays(project.endDate)]);
+                wsData.push([]);
+                
+                // Progress Overview
+                wsData.push(['Progress Overview']);
+                wsData.push(['Project Progress', project.projectProgress + '%']);
+                wsData.push(['SCM Progress', project.scmProgress + '%']);
+                wsData.push([]);
+                
+                // Status Information
+                wsData.push(['Status Information']);
+                wsData.push(['Testing Status', project.testingStatus || 'Not Started']);
+                wsData.push(['SCM Progress Status', project.scmProgressStatus || 'Not Started']);
+                wsData.push([]);
+                
+                // Assigned Personnel
+                wsData.push(['Assigned Personnel']);
+                wsData.push(['Assign Person', project.assignPerson || 'Not assigned']);
+                wsData.push(['Testing Person', project.testingPerson || 'Not assigned']);
+                wsData.push(['Quality Person', project.qualityPerson || 'Not assigned']);
+                wsData.push([]);
+                
+                // Additional Information
+                wsData.push(['Additional Information']);
+                wsData.push(['Project Details', project.details || 'No details provided']);
+                wsData.push(['Assign Person Comments', project.assignComments || 'No comments']);
+                wsData.push(['Remarks', project.remarks || 'No remarks']);
+                wsData.push([]);
+                
+                // Create worksheet
+                const ws = XLSX.utils.aoa_to_sheet(wsData);
+                
+                // Set column widths
+                ws['!cols'] = [
+                    { wch: 20 }, // Column A
+                    { wch: 40 }  // Column B
+                ];
+                
+                // Add styling to headers
+                const range = XLSX.utils.decode_range(ws['!ref']);
+                for (let C = range.s.c; C <= range.e.c; ++C) {
+                    for (let R = range.s.r; R <= range.e.r; ++R) {
+                        const cellAddress = { c: C, r: R };
+                        const cellRef = XLSX.utils.encode_cell(cellAddress);
+                        
+                        // Style for section headers
+                        if (R === 4 || R === 9 || R === 13 || R === 17 || R === 22) {
+                            if (!ws[cellRef]) ws[cellRef] = {};
+                            ws[cellRef].s = {
+                                font: { bold: true },
+                                fill: { fgColor: { rgb: "E0E0E0" } }
+                            };
+                        }
+                        
+                        // Style for title
+                        if (R === 0) {
+                            if (!ws[cellRef]) ws[cellRef] = {};
+                            ws[cellRef].s = {
+                                font: { bold: true, sz: 16 },
+                                alignment: { horizontal: "center" }
+                            };
+                        }
+                    }
+                }
+                
+                // Add the worksheet to the workbook
+                XLSX.utils.book_append_sheet(wb, ws, sanitizedProjectName);
+            });
+            
+            // Generate Excel file and trigger download
+            XLSX.writeFile(wb, `All_Projects_Report_${new Date().toISOString().split('T')[0]}.xlsx`);
+            showNotification('All projects exported successfully!', 'success');
+        }
+        
+        // Project form submission
+        function handleProjectSubmit(e) {
+            e.preventDefault();
+            
+            const projectData = {
+                id: editingProjectId || Date.now(),
+                name: document.getElementById('projectName').value,
+                status: document.getElementById('projectStatus').value,
+                testingStatus: document.getElementById('testingStatus').value,
+                scmProgressStatus: document.getElementById('scmProgressStatus').value,
+                startDate: document.getElementById('startDate').value,
+                endDate: document.getElementById('endDate').value,
+                testingDate: document.getElementById('testingDate').value,
+                projectProgress: parseInt(document.getElementById('projectProgress').value),
+                scmProgress: parseInt(document.getElementById('scmProgress').value),
+                assignPerson: document.getElementById('assignPerson').value,
+                testingPerson: document.getElementById('testingPerson').value,
+                qualityPerson: document.getElementById('qualityPerson').value,
+                details: document.getElementById('projectDetails').value,
+                assignComments: document.getElementById('assignComments').value,
+                remarks: document.getElementById('remarks').value,
+                documents: uploadedDocuments,
+                criteria: projectCriteria,
+                createdAt: editingProjectId ? 
+                    projects.find(p => p.id === editingProjectId).createdAt : 
+                    new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            };
+            
+            if (editingProjectId) {
+                // Update existing project
+                const index = projects.findIndex(p => p.id === editingProjectId);
+                projects[index] = projectData;
+                showNotification('Project updated successfully!', 'success');
+            } else {
+                // Add new project
+                projects.push(projectData);
+                showNotification('Project created successfully!', 'success');
+            }
+            
+            // Save to localStorage
+            localStorage.setItem('projects', JSON.stringify(projects));
+            
+            // Save to linked folder if available
+            if (projectDirHandle) {
+                saveProjectToFolder(projectData, projectDirHandle);
+            }
+            
+            // Reset form and go back to projects view
+            resetForm();
+            showProjects();
+            updateDashboardStats();
+        }
+        
+        // View functions
+        function showDashboard() {
+            hideAllViews();
+            document.getElementById('dashboardView').classList.remove('hidden');
+            currentView = 'dashboard';
+            updateDashboardStats();
+            updateRecentProjectsTable();
+            updateProgressChart();
+        }
+        
+        function showProjects() {
+            hideAllViews();
+            document.getElementById('projectsView').classList.remove('hidden');
+            currentView = 'projects';
+            renderProjects();
+        }
+        
+        function showCreateProject() {
+            hideAllViews();
+            document.getElementById('createProjectView').classList.remove('hidden');
+            currentView = 'create';
+            editingProjectId = null;
+            document.getElementById('formTitle').textContent = 'Create New Project';
+            resetForm();
+            updatePersonDropdowns();
+        }
+        
+        function showProjectDetail(projectId) {
+            const project = projects.find(p => p.id === projectId);
+            if (!project) return;
+            
+            // Check if user has permission to view this project
+            if (currentUser.role === 'user' && project.assignPerson !== currentUser.name) {
+                showNotification('You do not have permission to view this project', 'error');
+                return;
+            }
+            
+            hideAllViews();
+            document.getElementById('projectDetailView').classList.remove('hidden');
+            document.getElementById('projectDetailView').setAttribute('data-project-id', projectId);
+            currentView = 'detail';
+            
+            // Populate project details
+            document.getElementById('detailProjectName').textContent = project.name;
+            document.getElementById('detailProjectStatus').textContent = project.status;
+            document.getElementById('detailProjectStatus').className = `px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(project.status)}`;
+            
+            document.getElementById('detailTestingStatus').textContent = project.testingStatus || 'Not Started';
+            document.getElementById('detailTestingStatus').className = `px-3 py-1 rounded-full text-sm font-medium ${getTestingStatusColor(project.testingStatus)}`;
+            
+            document.getElementById('detailSCMProgressStatus').textContent = project.scmProgressStatus || 'Not Started';
+            document.getElementById('detailSCMProgressStatus').className = `px-3 py-1 rounded-full text-sm font-medium ${getSCMStatusColor(project.scmProgressStatus)}`;
+            
+            document.getElementById('detailStartDate').textContent = formatDate(project.startDate);
+            document.getElementById('detailEndDate').textContent = formatDate(project.endDate);
+            document.getElementById('detailTestingDate').textContent = formatDate(project.testingDate) || 'Not set';
+            document.getElementById('detailRemainingTestDays').textContent = calculateRemainingDays(project.testingDate);
+            document.getElementById('detailRemainingEndDays').textContent = calculateRemainingDays(project.endDate);
+            
+            document.getElementById('detailProjectProgress').textContent = project.projectProgress + '%';
+            document.getElementById('detailProjectProgressBar').style.width = project.projectProgress + '%';
+            
+            document.getElementById('detailSCMProgress').textContent = project.scmProgress + '%';
+            document.getElementById('detailSCMProgressBar').style.width = project.scmProgress + '%';
+            
+            document.getElementById('detailAssignPerson').textContent = project.assignPerson || 'Not assigned';
+            document.getElementById('detailTestingPerson').textContent = project.testingPerson || 'Not assigned';
+            document.getElementById('detailQualityPerson').textContent = project.qualityPerson || 'Not assigned';
+            
+            document.getElementById('detailProjectDetails').textContent = project.details || 'No details provided';
+            document.getElementById('detailAssignComments').textContent = project.assignComments || 'No comments';
+            document.getElementById('detailRemarks').textContent = project.remarks || 'No remarks';
+            
+            // Set project folder path
+            const sanitizedProjectName = sanitizeProjectName(project.name);
+            document.getElementById('projectFolderPath').textContent = sanitizedProjectName;
+            
+            // Populate user progress form for regular users
+            if (currentUser.role === 'user') {
+                document.getElementById('userProjectStatus').value = project.status;
+                document.getElementById('userProjectProgress').value = project.projectProgress;
+                document.getElementById('userTestingStatus').value = project.testingStatus || '';
+                document.getElementById('userSCMProgress').value = project.scmProgress;
+                document.getElementById('userAssignComments').value = project.assignComments || '';
+            }
+            
+            // Display documents
+            const documentsContainer = document.getElementById('detailDocuments');
+            documentsContainer.innerHTML = '';
+            
+            if (project.documents && project.documents.length > 0) {
+                project.documents.forEach(doc => {
+                    const docElement = document.createElement('div');
+                    docElement.className = 'document-item glass-effect rounded-lg p-4 flex items-center justify-between';
+                    docElement.innerHTML = `
+                        <div class="flex items-center gap-3">
+                            <i class="fas ${getDocumentIcon(doc.name)} file-icon text-xl"></i>
+                            <div>
+                                <p class="font-medium">${doc.name}</p>
+                                <p class="text-sm text-gray-500">${(doc.size / 1024).toFixed(2)} KB • ${new Date(doc.uploadDate).toLocaleDateString()}</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="previewDocument(${JSON.stringify(doc).replace(/"/g, '&quot;')})" class="preview-button text-white px-3 py-1 rounded-lg text-sm">
+                                <i class="fas fa-eye mr-1"></i>Preview
+                            </button>
+                            <button onclick="downloadDocument(${JSON.stringify(doc).replace(/"/g, '&quot;')})" class="download-button text-white px-3 py-1 rounded-lg text-sm">
+                                <i class="fas fa-download mr-1"></i>Download
+                            </button>
+                        </div>
+                    `;
+                    documentsContainer.appendChild(docElement);
+                });
+            } else {
+                documentsContainer.innerHTML = '<p class="text-gray-500">No documents uploaded</p>';
+            }
+            
+            // Display criteria
+            const criteriaContainer = document.getElementById('detailCriteria');
+            criteriaContainer.innerHTML = '';
+            
+            if (project.criteria && project.criteria.length > 0) {
+                project.criteria.forEach(criterion => {
+                    const criterionElement = document.createElement('div');
+                    criterionElement.className = 'glass-effect rounded-lg p-4';
+                    
+                    const checklistItems = criterion.checklist.map(item => `
+                        <div class="flex items-center gap-2 mb-2">
+                            <i class="fas ${item.checked ? 'fa-check-square text-green-600' : 'fa-square text-gray-400'}"></i>
+                            <span class="${item.checked ? 'line-through text-gray-500' : ''}">${item.text}</span>
+                        </div>
+                    `).join('');
+                    
+                    criterionElement.innerHTML = `
+                        <h4 class="font-semibold mb-3">${criterion.name}</h4>
+                        <div class="space-y-1">
+                            ${checklistItems}
+                        </div>
+                    `;
+                    
+                    criteriaContainer.appendChild(criterionElement);
+                });
+            } else {
+                criteriaContainer.innerHTML = '<p class="text-gray-500">No criteria defined</p>';
+            }
+        }
+        
+        function editProject() {
+            const projectId = parseInt(document.getElementById('projectDetailView').getAttribute('data-project-id'));
+            editProjectById(projectId);
+        }
+        
+        function editProjectById(projectId) {
+            const project = projects.find(p => p.id === projectId);
+            if (!project) return;
+            
+            showCreateProject();
+            editingProjectId = projectId;
+            document.getElementById('formTitle').textContent = 'Edit Project';
+            
+            // Populate form with project data
+            document.getElementById('projectName').value = project.name;
+            document.getElementById('projectStatus').value = project.status;
+            document.getElementById('testingStatus').value = project.testingStatus || '';
+            document.getElementById('scmProgressStatus').value = project.scmProgressStatus || '';
+            document.getElementById('startDate').value = project.startDate;
+            document.getElementById('endDate').value = project.endDate;
+            document.getElementById('testingDate').value = project.testingDate || '';
+            document.getElementById('projectProgress').value = project.projectProgress;
+            document.getElementById('scmProgress').value = project.scmProgress;
+            document.getElementById('assignPerson').value = project.assignPerson;
+            document.getElementById('testingPerson').value = project.testingPerson || '';
+            document.getElementById('qualityPerson').value = project.qualityPerson || '';
+            document.getElementById('projectDetails').value = project.details || '';
+            document.getElementById('assignComments').value = project.assignComments || '';
+            document.getElementById('remarks').value = project.remarks || '';
+            
+            // Set uploaded documents
+            uploadedDocuments = project.documents || [];
+            renderUploadedDocuments();
+            
+            // Set criteria
+            projectCriteria = project.criteria || [];
+            renderCriteria();
+            
+            // Update project folder name
+            updateProjectFolderName();
+            
+            // Update person dropdowns
+            updatePersonDropdowns();
+        }
+        
+        function confirmDeleteProject() {
+            const projectId = parseInt(document.getElementById('projectDetailView').getAttribute('data-project-id'));
+            confirmDeleteProjectById(projectId);
+        }
+        
+        function confirmDeleteProjectById(projectId) {
+            projectToDelete = projectId;
+            document.getElementById('deleteModal').classList.remove('hidden');
+        }
+        
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').classList.add('hidden');
+            projectToDelete = null;
+        }
+        
+        function deleteProject() {
+            if (!projectToDelete) return;
+            
+            projects = projects.filter(p => p.id !== projectToDelete);
+            localStorage.setItem('projects', JSON.stringify(projects));
+            
+            showNotification('Project deleted successfully!', 'success');
+            closeDeleteModal();
+            
+            if (currentView === 'detail') {
+                showProjects();
+            } else {
+                renderProjects();
+                updateDashboardStats();
+            }
+        }
+        
+        function hideAllViews() {
+            document.getElementById('dashboardView').classList.add('hidden');
+            document.getElementById('projectsView').classList.add('hidden');
+            document.getElementById('createProjectView').classList.add('hidden');
+            document.getElementById('projectDetailView').classList.add('hidden');
+            document.getElementById('administrativeView').classList.add('hidden');
+        }
+        
+        function resetForm() {
+            document.getElementById('projectForm').reset();
+            uploadedDocuments = [];
+            projectCriteria = [];
+            renderUploadedDocuments();
+            renderCriteria();
+            updateProjectFolderName();
+        }
+        
+        // Document handling
+        function setupDocumentUpload() {
+            const documentInput = document.getElementById('projectDocuments');
+            if (documentInput) {
+                documentInput.addEventListener('change', handleDocumentUpload);
+                
+                // Drag and drop functionality
+                const dropZone = document.querySelector('.border-2.border-dashed');
+                
+                if (dropZone) {
+                    dropZone.addEventListener('dragover', (e) => {
+                        e.preventDefault();
+                        dropZone.classList.add('border-indigo-500', 'bg-indigo-50');
+                    });
+                    
+                    dropZone.addEventListener('dragleave', () => {
+                        dropZone.classList.remove('border-indigo-500', 'bg-indigo-50');
+                    });
+                    
+                    dropZone.addEventListener('drop', (e) => {
+                        e.preventDefault();
+                        dropZone.classList.remove('border-indigo-500', 'bg-indigo-50');
+                        
+                        if (e.dataTransfer.files.length > 0) {
+                            handleFiles(e.dataTransfer.files);
+                        }
+                    });
+                }
+            }
+        }
+        
+        function handleDocumentUpload(e) {
+            if (e.target.files.length > 0) {
+                handleFiles(e.target.files);
+            }
+        }
+        
+        function handleFiles(files) {
+            const projectName = document.getElementById('projectName').value || 'Project Name';
+            const sanitizedProjectName = sanitizeProjectName(projectName);
+            
+            Array.from(files).forEach(file => {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    const document = {
+                        name: file.name,
+                        type: file.type,
+                        size: file.size,
+                        data: e.target.result,
+                        uploadDate: new Date().toISOString(),
+                        folderPath: `${sanitizedProjectName}/documents`
+                    };
+                    
+                    uploadedDocuments.push(document);
+                    renderUploadedDocuments();
+                };
+                
+                reader.readAsDataURL(file);
+            });
+        }
+        
+        function renderUploadedDocuments() {
+            const container = document.getElementById('uploadedDocuments');
+            if (!container) return;
+            
+            container.innerHTML = '';
+            
+            if (uploadedDocuments.length === 0) {
+                container.innerHTML = '<p class="text-gray-500">No documents uploaded</p>';
+                return;
+            }
+            
+            uploadedDocuments.forEach((doc, index) => {
+                const docElement = document.createElement('div');
+                docElement.className = 'document-item glass-effect rounded-lg p-4 flex items-center justify-between';
+                docElement.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <i class="fas ${getDocumentIcon(doc.name)} file-icon text-xl"></i>
+                        <div>
+                            <p class="font-medium">${doc.name}</p>
+                            <p class="text-sm text-gray-500">${(doc.size / 1024).toFixed(2)} KB</p>
+                        </div>
+                    </div>
+                    <button onclick="removeDocument(${index})" class="text-red-600 hover:text-red-800">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                `;
+                container.appendChild(docElement);
+            });
+        }
+        
+        function removeDocument(index) {
+            uploadedDocuments.splice(index, 1);
+            renderUploadedDocuments();
+        }
+        
+        function getDocumentIcon(filename) {
+            const extension = filename.split('.').pop().toLowerCase();
+            
+            switch (extension) {
+                case 'pdf':
+                    return 'fa-file-pdf';
+                case 'doc':
+                case 'docx':
+                    return 'fa-file-word';
+                case 'xls':
+                case 'xlsx':
+                    return 'fa-file-excel';
+                case 'jpg':
+                case 'jpeg':
+                case 'png':
+                    return 'fa-file-image';
+                default:
+                    return 'fa-file';
+            }
+        }
+        
+        function previewDocument(doc) {
+            currentDocument = doc;
+            
+            const modal = document.getElementById('documentPreviewModal');
+            const content = document.getElementById('documentPreviewContent');
+            const details = document.getElementById('documentDetails');
+            
+            // Set document details
+            details.innerHTML = `
+                <p><strong>Name:</strong> ${doc.name}</p>
+                <p><strong>Size:</strong> ${(doc.size / 1024).toFixed(2)} KB</p>
+                <p><strong>Type:</strong> ${doc.type}</p>
+                <p><strong>Upload Date:</strong> ${new Date(doc.uploadDate).toLocaleDateString()}</p>
+            `;
+            
+            // Preview based on file type
+            const extension = doc.name.split('.').pop().toLowerCase();
+            
+            if (['jpg', 'jpeg', 'png', 'gif'].includes(extension)) {
+                // Image preview
+                content.innerHTML = `<img src="${doc.data}" alt="${doc.name}" class="document-preview mx-auto">`;
+            } else if (extension === 'pdf') {
+                // PDF preview (using iframe)
+                content.innerHTML = `<iframe src="${doc.data}" class="document-preview w-full h-[60vh]"></iframe>`;
+            } else if (['txt'].includes(extension)) {
+                // Text preview
+                fetch(doc.data)
+                    .then(res => res.text())
+                    .then(text => {
+                        content.innerHTML = `<pre class="document-preview bg-gray-100 p-4 rounded-lg overflow-auto">${text}</pre>`;
+                    })
+                    .catch(error => {
+                        content.innerHTML = '<p class="text-center text-gray-500">Preview not available for this file type</p>';
+                    });
+            } else {
+                // Generic preview
+                content.innerHTML = '<p class="text-center text-gray-500">Preview not available for this file type</p>';
+            }
+            
+            modal.classList.remove('hidden');
+        }
+        
+        function closeDocumentPreview() {
+            document.getElementById('documentPreviewModal').classList.add('hidden');
+            currentDocument = null;
+        }
+        
+        function downloadDocument(doc) {
+            const link = document.createElement('a');
+            link.href = doc.data;
+            link.download = doc.name;
+            link.click();
+        }
+        
+        function downloadCurrentDocument() {
+            if (currentDocument) {
+                downloadDocument(currentDocument);
+            }
+        }
+        
+        // Criteria handling
+        function addCriterion() {
+            const criterionName = prompt('Enter criterion name:');
+            if (!criterionName) return;
+            
+            const criterion = {
+                name: criterionName,
+                checklist: []
+            };
+            
+            projectCriteria.push(criterion);
+            renderCriteria();
+        }
+        
+        function renderCriteria() {
+            const container = document.getElementById('criteriaList');
+            if (!container) return;
+            
+            container.innerHTML = '';
+            
+            if (projectCriteria.length === 0) {
+                container.innerHTML = '<p class="text-gray-500">No criteria defined</p>';
+                return;
+            }
+            
+            projectCriteria.forEach((criterion, criterionIndex) => {
+                const criterionElement = document.createElement('div');
+                criterionElement.className = 'criteria-item glass-effect rounded-lg p-4';
+                
+                const checklistItems = criterion.checklist.map((item, itemIndex) => `
+                    <div class="flex items-center gap-2 mb-2">
+                        <input type="checkbox" id="item-${criterionIndex}-${itemIndex}" ${item.checked ? 'checked' : ''} 
+                               onchange="updateChecklistItem(${criterionIndex}, ${itemIndex})" 
+                               class="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500">
+                        <input type="text" value="${item.text}" 
+                               onchange="updateChecklistItemText(${criterionIndex}, ${itemIndex}, this.value)" 
+                               class="flex-1 px-2 py-1 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <button onclick="removeChecklistItem(${criterionIndex}, ${itemIndex})" 
+                                class="text-red-600 hover:text-red-800">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `).join('');
+                
+                criterionElement.innerHTML = `
+                    <div class="flex justify-between items-center mb-3">
+                        <h4 class="font-semibold">${criterion.name}</h4>
+                        <div class="flex gap-2">
+                            <button onclick="addChecklistItem(${criterionIndex})" 
+                                    class="bg-green-600 text-white px-2 py-1 rounded-lg hover:bg-green-700 transition-colors text-sm">
+                                <i class="fas fa-plus mr-1"></i>Add Item
+                            </button>
+                            <button onclick="removeCriterion(${criterionIndex})" 
+                                    class="bg-red-600 text-white px-2 py-1 rounded-lg hover:bg-red-700 transition-colors text-sm">
+                                <i class="fas fa-trash mr-1"></i>Remove
+                            </button>
+                        </div>
+                    </div>
+                    <div class="space-y-1">
+                        ${checklistItems}
+                    </div>
+                `;
+                
+                container.appendChild(criterionElement);
+            });
+        }
+        
+        function addChecklistItem(criterionIndex) {
+            const itemText = prompt('Enter checklist item:');
+            if (!itemText) return;
+            
+            projectCriteria[criterionIndex].checklist.push({
+                text: itemText,
+                checked: false
+            });
+            
+            renderCriteria();
+        }
+        
+        function updateChecklistItem(criterionIndex, itemIndex) {
+            projectCriteria[criterionIndex].checklist[itemIndex].checked = 
+                document.getElementById(`item-${criterionIndex}-${itemIndex}`).checked;
+        }
+        
+        function updateChecklistItemText(criterionIndex, itemIndex, text) {
+            projectCriteria[criterionIndex].checklist[itemIndex].text = text;
+        }
+        
+        function removeChecklistItem(criterionIndex, itemIndex) {
+            projectCriteria[criterionIndex].checklist.splice(itemIndex, 1);
+            renderCriteria();
+        }
+        
+        function removeCriterion(criterionIndex) {
+            projectCriteria.splice(criterionIndex, 1);
+            renderCriteria();
+        }
+        
+        // Dashboard functions
+        function updateDashboardStats() {
+            let projectsToCount = projects;
+            
+            // For regular users, only count their assigned projects
+            if (currentUser && currentUser.role === 'user') {
+                projectsToCount = projects.filter(p => p.assignPerson === currentUser.name);
+            }
+            
+            const totalProjects = projectsToCount.length;
+            const inProgressProjects = projectsToCount.filter(p => p.status === 'In Progress').length;
+            const testingProjects = projectsToCount.filter(p => p.status === 'Testing').length;
+            const completedProjects = projectsToCount.filter(p => p.status === 'Completed').length;
+            
+            document.getElementById('totalProjects').textContent = totalProjects;
+            document.getElementById('inProgressProjects').textContent = inProgressProjects;
+            document.getElementById('testingProjects').textContent = testingProjects;
+            document.getElementById('completedProjects').textContent = completedProjects;
+        }
+        
+        function updateRecentProjectsTable() {
+            const tableBody = document.getElementById('recentProjectsTable');
+            
+            // Filter projects based on user role
+            let projectsToFilter = projects;
+            if (currentUser && currentUser.role === 'user') {
+                projectsToFilter = projects.filter(p => p.assignPerson === currentUser.name);
+            }
+            
+            // Sort projects by updated date (newest first) and take the first 5
+            const recentProjects = [...projectsToFilter]
+                .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
+                .slice(0, 5);
+            
+            if (recentProjects.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-gray-500">No projects found</td></tr>';
+                return;
+            }
+            
+            tableBody.innerHTML = recentProjects.map(project => {
+                const remainingTestDays = calculateRemainingDays(project.testingDate);
+                const remainingEndDays = calculateRemainingDays(project.endDate);
+                
+                return `
+                    <tr class="border-b hover:bg-gray-50">
+                        <td class="py-3 px-4">
+                            <button onclick="showProjectDetail(${project.id})" class="text-indigo-600 hover:text-indigo-800 font-medium">
+                                ${project.name}
+                            </button>
+                        </td>
+                        <td class="py-3 px-4">
+                            <span class="px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(project.status)}">
+                                ${project.status}
+                            </span>
+                        </td>
+                        <td class="py-3 px-4">
+                            <span class="px-2 py-1 rounded-full text-xs font-medium ${getTestingStatusColor(project.testingStatus)}">
+                                ${project.testingStatus || 'Not Started'}
+                            </span>
+                        </td>
+                        <td class="py-3 px-4">
+                            <span class="px-2 py-1 rounded-full text-xs font-medium ${getSCMStatusColor(project.scmProgressStatus)}">
+                                ${project.scmProgressStatus || 'Not Started'}
+                            </span>
+                        </td>
+                        <td class="py-3 px-4">
+                            <div class="flex items-center gap-2">
+                                <div class="w-24 bg-gray-200 rounded-full h-2">
+                                    <div class="bg-indigo-600 h-2 rounded-full" style="width: ${project.projectProgress}%"></div>
+                                </div>
+                                <span class="text-sm">${project.projectProgress}%</span>
+                            </div>
+                        </td>
+                        <td class="py-3 px-4">
+                            <span class="${remainingEndDays < 7 ? 'text-red-600 font-medium' : ''}">${formatDate(project.endDate)}</span>
+                        </td>
+                        <td class="py-3 px-4">
+                            <div class="flex gap-2">
+                                <button onclick="showProjectDetail(${project.id})" 
+                                        class="text-indigo-600 hover:text-indigo-800">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                ${currentUser.role === 'superuser' ? `
+                                    <button onclick="editProjectById(${project.id})" 
+                                            class="text-blue-600 hover:text-blue-800">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+        
+        function updateProgressChart() {
+            const ctx = document.getElementById('progressChart').getContext('2d');
+            
+            // Destroy existing chart if it exists
+            if (window.progressChartInstance) {
+                window.progressChartInstance.destroy();
+            }
+            
+            // Filter projects based on user role
+            let projectsToFilter = projects;
+            if (currentUser && currentUser.role === 'user') {
+                projectsToFilter = projects.filter(p => p.assignPerson === currentUser.name);
+            }
+            
+            // Prepare data for the chart
+            const statusCounts = {
+                'In Progress': 0,
+                'Testing': 0,
+                'Completed': 0,
+                'In Hold': 0,
+                'Cancelled': 0,
+                'Documents Submitted': 0,
+                'Documents Processing': 0,
+                'Working On Delivery': 0
+            };
+            
+            projectsToFilter.forEach(project => {
+                if (statusCounts.hasOwnProperty(project.status)) {
+                    statusCounts[project.status]++;
+                }
+            });
+            
+            const chartData = {
+                labels: Object.keys(statusCounts),
+                datasets: [{
+                    label: 'Projects',
+                    data: Object.values(statusCounts),
+                    backgroundColor: [
+                        'rgba(255, 159, 64, 0.7)',  // In Progress - orange
+                        'rgba(153, 102, 255, 0.7)', // Testing - purple
+                        'rgba(75, 192, 192, 0.7)',  // Completed - teal
+                        'rgba(255, 205, 86, 0.7)',  // In Hold - yellow
+                        'rgba(255, 99, 132, 0.7)',  // Cancelled - red
+                        'rgba(54, 162, 235, 0.7)',  // Documents Submitted - blue
+                        'rgba(201, 203, 207, 0.7)',  // Documents Processing - gray
+                        'rgba(46, 204, 113, 0.7)'   // Working On Delivery - green
+                    ],
+                    borderColor: [
+                        'rgb(255, 159, 64)',
+                        'rgb(153, 102, 255)',
+                        'rgb(75, 192, 192)',
+                        'rgb(255, 205, 86)',
+                        'rgb(255, 99, 132)',
+                        'rgb(54, 162, 235)',
+                        'rgb(201, 203, 207)',
+                        'rgb(46, 204, 113)'
+                    ],
+                    borderWidth: 1
+                }]
+            };
+            
+            window.progressChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: chartData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${context.raw}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Utility functions
+        function formatDate(dateString) {
+            if (!dateString) return 'Not set';
+            
+            const date = new Date(dateString);
+            return date.toLocaleDateString();
+        }
+        
+        function calculateRemainingDays(dateString) {
+            if (!dateString) return 'Not set';
+            
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            const endDate = new Date(dateString);
+            endDate.setHours(0, 0, 0, 0);
+            
+            const diffTime = endDate - today;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            if (diffDays < 0) {
+                return `Overdue by ${Math.abs(diffDays)} days`;
+            }
+            
+            return `${diffDays} days`;
+        }
+        
+        function getStatusColor(status) {
+            switch (status) {
+                case 'In Progress':
+                    return 'bg-orange-100 text-orange-800';
+                case 'Testing':
+                    return 'bg-purple-100 text-purple-800';
+                case 'Completed':
+                    return 'bg-green-100 text-green-800';
+                case 'In Hold':
+                    return 'bg-yellow-100 text-yellow-800';
+                case 'Cancelled':
+                    return 'bg-red-100 text-red-800';
+                case 'Documents Submitted':
+                    return 'bg-blue-100 text-blue-800';
+                case 'Documents Processing':
+                    return 'bg-indigo-100 text-indigo-800';
+                case 'Working On Delivery':
+                    return 'bg-green-100 text-green-800';
+                default:
+                    return 'bg-gray-100 text-gray-800';
+            }
+        }
+        
+        function getTestingStatusColor(status) {
+            switch (status) {
+                case 'In Progress':
+                    return 'bg-orange-100 text-orange-800';
+                case 'Testing Failed':
+                    return 'bg-red-100 text-red-800';
+                case 'Testing Hold':
+                    return 'bg-yellow-100 text-yellow-800';
+                case 'Testing Cancel':
+                    return 'bg-red-100 text-red-800';
+                case 'Testing Complete':
+                    return 'bg-green-100 text-green-800';
+                default:
+                    return 'bg-gray-100 text-gray-800';
+            }
+        }
+        
+        function getSCMStatusColor(status) {
+            switch (status) {
+                case 'In Progress':
+                    return 'bg-orange-100 text-orange-800';
+                case 'Party Searching':
+                    return 'bg-yellow-100 text-yellow-800';
+                case 'Party Confirm':
+                    return 'bg-blue-100 text-blue-800';
+                case 'PO/WO Process':
+                    return 'bg-indigo-100 text-indigo-800';
+                case 'Working On Delivery':
+                    return 'bg-purple-100 text-purple-800';
+                case 'Complete':
+                    return 'bg-green-100 text-green-800';
+                default:
+                    return 'bg-gray-100 text-gray-800';
+            }
+        }
+        
+        function showNotification(message, type = 'info') {
+            const container = document.getElementById('notificationsContainer');
+            
+            const notification = document.createElement('div');
+            notification.className = `notification glass-effect rounded-lg p-4 flex items-center gap-3 ${
+                type === 'success' ? 'border-l-4 border-green-500' :
+                type === 'error' ? 'border-l-4 border-red-500' :
+                'border-l-4 border-blue-500'
+            }`;
+            
+            const icon = type === 'success' ? 'fa-check-circle text-green-500' :
+                         type === 'error' ? 'fa-exclamation-circle text-red-500' :
+                         'fa-info-circle text-blue-500';
+            
+            notification.innerHTML = `
+                <i class="fas ${icon} text-xl"></i>
+                <span>${message}</span>
+            `;
+            
+            container.appendChild(notification);
+            
+            // Auto remove after 3 seconds
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                setTimeout(() => {
+                    container.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
